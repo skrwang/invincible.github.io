@@ -1,0 +1,546 @@
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>喝酒记分系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+            href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+            rel="stylesheet"
+    />
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        .toast-enter {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(3px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 font-sans">
+<!-- 顶部标题栏 -->
+<header class="sticky top-0 bg-white shadow-md rounded-lg p-4 mb-4 z-10">
+    <h1 class="text-2xl font-bold text-center text-gray-800">
+        喝酒记分系统
+    </h1>
+    <div class="flex justify-center mt-2 space-x-3">
+        <button id="resetAllBtn" class="text-sm bg-amber-500 text-white px-3 py-1 rounded-md hover:bg-amber-600 transition">
+            <i class="fas fa-rotate-left mr-1"></i>重置所有
+        </button>
+        <button id="rulesBtn" class="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition">
+            <i class="fas fa-info-circle mr-1"></i>游戏规则
+        </button>
+        <button id="settingsBtn" class="text-sm bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition">
+            <i class="fas fa-cog mr-1"></i>设置
+        </button>
+    </div>
+</header>
+
+<main class="bg-white rounded-lg shadow-xl p-4 mb-6">
+    <!-- 添加玩家区域 -->
+    <div class="mb-6 p-4 border border-gray-200 rounded-md">
+        <h2 class="text-xl font-semibold text-gray-700 mb-3">添加玩家</h2>
+        <div class="flex items-center space-x-2">
+            <input
+                    class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="playerNameInput"
+                    placeholder="输入玩家姓名"
+                    type="text"
+            />
+            <button
+                    class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition flex items-center space-x-1"
+                    id="addPlayerBtn"
+            >
+                <i class="fas fa-user-plus"> </i>
+                <span> 添加 </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 玩家列表区域 -->
+    <div class="mb-4 p-4 border border-gray-200 rounded-md">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xl font-semibold text-gray-700">玩家列表</h2>
+            <div class="flex space-x-2">
+                <button id="sortNameBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition">
+                    <i class="fas fa-sort-alpha-down mr-1"></i>姓名
+                </button>
+                <button id="sortScoreBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition">
+                    <i class="fas fa-sort-numeric-down mr-1"></i>分数
+                </button>
+            </div>
+        </div>
+        <div class="space-y-3" id="playerList">
+            <!-- 玩家卡片将在这里动态生成 -->
+            <p class="text-gray-500 text-center py-6">暂无玩家，请添加玩家开始游戏。</p>
+        </div>
+    </div>
+</main>
+
+<!-- 自定义提示框 -->
+<div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 hidden max-w-xs text-center"></div>
+
+<!-- 规则模态框 -->
+<div id="rulesModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-5 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-xl font-bold text-gray-800">游戏规则</h3>
+            <button id="closeRulesBtn" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="text-gray-700 space-y-2 text-sm">
+            <p>1. 玩家输了酒局时，添加相应分数</p>
+            <p>2. 玩家喝掉一杯酒时，减去20分</p>
+            <p>3. 当分数达到清酒线（默认20分）时，需要喝酒</p>
+            <p>4. 分数不足时喝酒会产生负分，代表"欠酒"</p>
+            <p>5. 可以在设置中修改清酒线分数</p>
+        </div>
+    </div>
+</div>
+
+<!-- 设置模态框 -->
+<div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-xl font-bold text-gray-800">设置</h3>
+            <button id="closeSettingsBtn" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-gray-700 mb-1 text-sm">清酒线分数</label>
+                <input type="number" id="thresholdInput" min="1" class="w-full p-2 border border-gray-300 rounded-md" value="20">
+            </div>
+            <button id="saveSettingsBtn" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+                保存设置
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 确认对话框 -->
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-800 mb-3" id="confirmTitle">确认操作</h3>
+        <p class="text-gray-700 mb-4" id="confirmMessage">你确定要执行此操作吗？</p>
+        <div class="flex space-x-3">
+            <button id="cancelConfirmBtn" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition">
+                取消
+            </button>
+            <button id="confirmActionBtn" class="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+                确认
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全局设置
+    let settings = {
+        threshold: 20 // 清酒线分数
+    };
+
+    // 存储玩家数据的数组
+    let players = [];
+
+    // DOM 元素
+    const playerNameInput = document.getElementById('playerNameInput');
+    const addPlayerBtn = document.getElementById('addPlayerBtn');
+    const playerList = document.getElementById('playerList');
+    const toast = document.getElementById('toast');
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    const rulesBtn = document.getElementById('rulesBtn');
+    const rulesModal = document.getElementById('rulesModal');
+    const closeRulesBtn = document.getElementById('closeRulesBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const thresholdInput = document.getElementById('thresholdInput');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
+    const confirmActionBtn = document.getElementById('confirmActionBtn');
+    const sortNameBtn = document.getElementById('sortNameBtn');
+    const sortScoreBtn = document.getElementById('sortScoreBtn');
+
+    // 确认框回调函数
+    let confirmCallback = null;
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function () {
+        loadSettings();
+        loadPlayers();
+        renderPlayers();
+        setupEventListeners();
+
+        // 初始化设置输入框
+        thresholdInput.value = settings.threshold;
+    });
+
+    // 设置事件监听器
+    function setupEventListeners() {
+        // 添加玩家
+        addPlayerBtn.addEventListener('click', addPlayer);
+
+        // 按回车键添加玩家
+        playerNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+
+        // 重置所有玩家分数
+        resetAllBtn.addEventListener('click', function() {
+            showConfirm('重置所有', '确定要重置所有玩家的分数吗？', function() {
+                players.forEach(player => {
+                    player.score = 0;
+                });
+                savePlayers();
+                renderPlayers();
+                showToast('已重置所有玩家分数');
+            });
+        });
+
+        // 规则模态框
+        rulesBtn.addEventListener('click', () => rulesModal.classList.remove('hidden'));
+        closeRulesBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
+
+        // 设置模态框
+        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+        // 保存设置
+        saveSettingsBtn.addEventListener('click', function() {
+            const newThreshold = parseInt(thresholdInput.value);
+            if (newThreshold && newThreshold > 0) {
+                settings.threshold = newThreshold;
+                saveSettings();
+                settingsModal.classList.add('hidden');
+                showToast(`清酒线已设置为 ${newThreshold} 分`);
+                renderPlayers(); // 重新渲染以更新提示
+            } else {
+                showToast('请输入有效的分数');
+            }
+        });
+
+        // 确认框
+        cancelConfirmBtn.addEventListener('click', () => {
+            confirmModal.classList.add('hidden');
+            confirmCallback = null;
+        });
+
+        confirmActionBtn.addEventListener('click', () => {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            confirmModal.classList.add('hidden');
+            confirmCallback = null;
+        });
+
+        // 排序按钮
+        sortNameBtn.addEventListener('click', function() {
+            players.sort((a, b) => a.name.localeCompare(b.name));
+            renderPlayers();
+            showToast('已按姓名排序');
+        });
+
+        sortScoreBtn.addEventListener('click', function() {
+            players.sort((a, b) => b.score - a.score);
+            renderPlayers();
+            showToast('已按分数排序');
+        });
+    }
+
+    // 添加玩家
+    function addPlayer() {
+        const name = playerNameInput.value.trim();
+        if (name) {
+            // 检查是否已存在同名玩家
+            if (players.some(player => player.name === name)) {
+                showToast('玩家姓名已存在，请更换姓名');
+                return;
+            }
+
+            const newPlayer = {
+                id: Date.now(),
+                name: name,
+                score: 0
+            };
+
+            players.push(newPlayer);
+            playerNameInput.value = ''; // 清空输入框
+            savePlayers();
+            renderPlayers();
+            showToast(`已添加玩家: ${name}`);
+
+            // 自动聚焦到输入框，方便连续添加
+            playerNameInput.focus();
+        } else {
+            showToast('请输入玩家姓名');
+        }
+    }
+
+    // 渲染玩家列表
+    function renderPlayers() {
+        playerList.innerHTML = ''; // 清空现有列表
+
+        if (players.length === 0) {
+            playerList.innerHTML = "<p class=\"text-gray-500 text-center py-6\">暂无玩家，请添加玩家开始游戏。</p>";
+            return;
+        }
+
+        players.forEach(player => {
+            const isOverThreshold = player.score >= settings.threshold;
+            const playerCard = document.createElement('div');
+            playerCard.className = 'bg-gray-50 p-3 rounded-md shadow-sm flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2';
+            playerCard.innerHTML = `
+                    <div class="flex-grow text-center sm:text-left">
+                        <h3 class="text-base font-semibold text-gray-800">${player.name}</h3>
+                        <p class="text-gray-600">当前分数: <span class="font-bold text-lg ${isOverThreshold ? 'text-red-600' : 'text-green-600'}">${player.score}</span></p>
+                        <p class="text-xs text-gray-500">${isOverThreshold ? `已达清酒线(${settings.threshold}分)！` : ''}</p>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-1">
+                        <input type="number" placeholder="分数" value="1" min="1" class="w-16 p-1 border border-gray-300 rounded-md text-center text-gray-700 score-input" data-id="${player.id}">
+                        <button data-id="${player.id}" data-action="lose" class="score-btn bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition flex items-center text-sm">
+                            <i class="fas fa-minus mr-1"></i>输了
+                        </button>
+                        <button data-id="${player.id}" data-action="drink" class="score-btn bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition flex items-center text-sm">
+                            <i class="fas fa-beer-mug-empty mr-1"></i>喝了
+                        </button>
+                        <button data-id="${player.id}" data-action="delete" class="delete-btn bg-gray-300 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-400 transition flex items-center text-sm">
+                            <i class="fas fa-trash mr-1"></i>删除
+                        </button>
+                    </div>
+                `;
+            playerList.appendChild(playerCard);
+        });
+
+        // 为新渲染的按钮添加事件监听器
+        document.querySelectorAll('.score-btn').forEach(button => {
+            button.addEventListener('click', handleScoreChange);
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', deletePlayer);
+        });
+    }
+
+    // 处理分数变化
+    function handleScoreChange(event) {
+        const button = event.currentTarget;
+        const playerId = parseInt(button.dataset.id);
+        const action = button.dataset.action;
+        const playerIndex = players.findIndex(p => p.id === playerId);
+
+        if (playerIndex === -1) return; // 玩家不存在
+
+        const player = players[playerIndex];
+
+        if (action === 'lose') {
+            const scoreInput = document.querySelector(`.score-input[data-id="${playerId}"]`);
+            const scoreToAdd = parseInt(scoreInput.value);
+
+            if (isNaN(scoreToAdd) || scoreToAdd <= 0) {
+                showToast('请输入有效的正整数分数');
+                return;
+            }
+
+            player.score += scoreToAdd;
+            showToast(`${player.name} 分数增加了 ${scoreToAdd} 分`);
+
+            if (player.score >= settings.threshold) {
+                showToast(`${player.name} 已达${settings.threshold}分，该清酒一杯了！`);
+            }
+        }
+        else if (action === 'drink') {
+            const previousScore = player.score;
+            player.score -= settings.threshold;
+
+            if (previousScore >= settings.threshold) {
+                showToast(`${player.name} 喝了一杯，分数减少${settings.threshold}分`);
+            } else {
+                const owedPoints = settings.threshold - previousScore;
+                showToast(`${player.name} 喝了一杯，当前欠 ${owedPoints} 分`);
+            }
+        }
+
+        savePlayers();
+        renderPlayers();
+    }
+
+    // 删除玩家
+    function deletePlayer(event) {
+        const playerId = parseInt(event.currentTarget.dataset.id);
+        const player = players.find(p => p.id === playerId);
+
+        if (player) {
+            showConfirm('删除玩家', `确定要删除玩家"${player.name}"吗？`, function() {
+                players = players.filter(p => p.id !== playerId);
+                savePlayers();
+                renderPlayers();
+                showToast(`已删除玩家: ${player.name}`);
+            });
+        }
+    }
+
+    // 显示提示框
+    function showToast(message, duration = 2000) {
+        toast.textContent = message;
+        toast.classList.remove('hidden', 'toast-exit');
+        toast.classList.add('toast-enter');
+
+        setTimeout(() => {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }, duration);
+    }
+
+    // 显示确认框
+    function showConfirm(title, message, callback) {
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+        confirmCallback = callback;
+        confirmModal.classList.remove('hidden');
+    }
+
+    // 保存玩家数据到本地存储
+    function savePlayers() {
+        localStorage.setItem('drinkingGamePlayers', JSON.stringify(players));
+    }
+
+    // 从本地存储加载玩家数据
+    function loadPlayers() {
+        const storedPlayers = localStorage.getItem('drinkingGamePlayers');
+        if (storedPlayers) {
+            players = JSON.parse(storedPlayers);
+        }
+    }
+
+    // 保存设置到本地存储
+    function saveSettings() {
+        localStorage.setItem('drinkingGameSettings', JSON.stringify(settings));
+    }
+
+    // 从本地存储加载设置
+    function loadSettings() {
+        const storedSettings = localStorage.getItem('drinkingGameSettings');
+        if (storedSettings) {
+            settings = JSON.parse(storedSettings);
+        }
+    }
+
+    // 劫持属性的代码（保留原功能）
+    var ytCustomProperties = ['textContent', 'innerText'];
+    ytCustomProperties.forEach(function (prop) {
+        var descriptor = Object.getOwnPropertyDescriptor(Element.prototype, prop) || Object.getOwnPropertyDescriptor(Node.prototype, prop);
+        if (descriptor && descriptor.set) {
+            var originalSet = descriptor.set;
+            Object.defineProperty(Element.prototype, prop, {
+                set: function set(value) {
+                    var finalValue = this.dataset.yteditvalue ?? value;
+                    originalSet.call(this, finalValue);
+                },
+                configurable: true
+            });
+        }
+    });
+
+    var nativeElementQuerySelector = Element.prototype.querySelector;
+    var nativeDocumentQuerySelector = Document.prototype.querySelector;
+    function ytCustomQuerySelector(selector) {
+        var foundElement = this === document ? nativeDocumentQuerySelector.call(this, selector) : nativeElementQuerySelector.call(this, selector);
+        if (foundElement) {
+            if (!foundElement.hasAttribute('data-selectorname')) {
+                foundElement.setAttribute('data-selectorname', selector);
+            }
+            return foundElement;
+        }
+
+        var allElements = document.querySelectorAll('[data-selectorname]');
+        for (var i = 0; i < allElements.length; i++) {
+            if (allElements[i].getAttribute('data-selectorname') === selector) {
+                return allElements[i];
+            }
+        }
+
+        return null;
+    }
+
+    Document.prototype.querySelector = ytCustomQuerySelector;
+    Element.prototype.querySelector = ytCustomQuerySelector;
+
+    var nativeElementInsertBefore = Element.prototype.insertBefore;
+    function ytCustomInsertBefore(newNode, referenceNode) {
+        var defaultParentNode = this;
+
+        if (!referenceNode) {
+            return nativeElementInsertBefore.call(defaultParentNode, newNode, null);
+        }
+
+        if (referenceNode.parentNode === defaultParentNode) {
+            return nativeElementInsertBefore.call(defaultParentNode, newNode, referenceNode);
+        }
+
+        var referenceParentValue = referenceNode.getAttribute('data-ytparentvalue');
+        if (referenceParentValue) {
+            var actualParentNode = document.querySelector('[data-ytextravalue="' + referenceParentValue + '"]');
+            if (actualParentNode) {
+                var originalIndex = referenceNode.getAttribute('data-ytoriginindex');
+                if (originalIndex !== null && !isNaN(originalIndex)) {
+                    var children = Array.from(actualParentNode.children);
+
+                    for (var i = 0; i < children.length; i++) {
+                        var child = children[i];
+                        var childOriginalIndex = child.getAttribute('data-ytoriginindex');
+
+                        if (childOriginalIndex !== null && !isNaN(childOriginalIndex)) {
+                            if (parseInt(childOriginalIndex) > parseInt(originalIndex)) {
+                                return nativeElementInsertBefore.call(actualParentNode, newNode, child);
+                            }
+                        }
+                    }
+
+                    return nativeElementInsertBefore.call(actualParentNode, newNode, null);
+                }
+
+                return nativeElementInsertBefore.call(actualParentNode, newNode, null);
+            }
+        }
+
+        return nativeElementInsertBefore.call(defaultParentNode, newNode, null);
+    }
+
+    Element.prototype.insertBefore = ytCustomInsertBefore;
+
+    function addUniqueStyle(cssText, id = 'custom-style') {
+        var targetDom = document.getElementById(id);
+        if (targetDom && targetDom.tagName === 'STYLE') return;
+
+        var style = document.createElement('style');
+        style.id = id;
+        style.innerHTML = cssText;
+        document.head.appendChild(style);
+    }
+    addUniqueStyle('.yt-a-defalut-link[custom-a="true"] > * { margin:0;flex:1; }');
+</script>
+</body>
+</html>
