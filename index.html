@@ -1,160 +1,203 @@
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
-    <title>喝酒记分系统</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-            href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-            rel="stylesheet"
-    />
-    <style>
+	<meta charset="utf-8"/>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+	<title>李寨村饮酒记分系统</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link
+			href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+			rel="stylesheet"
+	/>
+	<style>
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
         }
+
         .toast-enter {
             animation: fadeIn 0.3s ease-out forwards;
         }
+
         .toast-exit {
             animation: fadeOut 0.3s ease-in forwards;
         }
+
         .modal-backdrop {
             backdrop-filter: blur(3px);
         }
-    </style>
+	</style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 font-sans">
 <!-- 顶部标题栏 -->
 <header class="sticky top-0 bg-white shadow-md rounded-lg p-4 mb-4 z-10">
-    <h1 class="text-2xl font-bold text-center text-gray-800">
-        喝酒记分系统
-    </h1>
-    <div class="flex justify-center mt-2 space-x-3">
-        <button id="resetAllBtn" class="text-sm bg-amber-500 text-white px-3 py-1 rounded-md hover:bg-amber-600 transition">
-            <i class="fas fa-rotate-left mr-1"></i>重置所有
-        </button>
-        <button id="rulesBtn" class="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition">
-            <i class="fas fa-info-circle mr-1"></i>游戏规则
-        </button>
-        <button id="settingsBtn" class="text-sm bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition">
-            <i class="fas fa-cog mr-1"></i>设置
-        </button>
-    </div>
+	<h1 class="text-2xl font-bold text-center text-gray-800">
+		喝酒记分系统
+	</h1>
+	<div class="flex justify-center mt-2 space-x-3">
+		<button id="resetAllBtn"
+		        class="text-sm bg-amber-500 text-white px-3 py-1 rounded-md hover:bg-amber-600 transition whitespace-nowrap">
+			<i class="fas fa-rotate-left mr-1"></i>重置所有
+		</button>
+		<button id="rulesBtn" class="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition whitespace-nowrap">
+			<i class="fas fa-info-circle mr-1"></i>游戏规则
+		</button>
+		<button id="settingsBtn"
+		        class="text-sm bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition whitespace-nowrap">
+			<i class="fas fa-cog mr-1"></i>设置
+		</button>
+	</div>
 </header>
 
 <main class="bg-white rounded-lg shadow-xl p-4 mb-6">
-    <!-- 添加玩家区域 -->
-    <div class="mb-6 p-4 border border-gray-200 rounded-md">
-        <h2 class="text-xl font-semibold text-gray-700 mb-3">添加玩家</h2>
-        <div class="flex items-center space-x-2">
-            <input
-                    class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    id="playerNameInput"
-                    placeholder="输入玩家姓名"
-                    type="text"
-            />
-            <button
-                    class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition flex items-center space-x-1"
-                    id="addPlayerBtn"
-            >
-                <i class="fas fa-user-plus"> </i>
-                <span> 添加 </span>
-            </button>
-        </div>
-    </div>
+	<!-- 添加玩家区域 -->
+	<div class="mb-6 p-4 border border-gray-200 rounded-md">
+		<h2 class="text-xl font-semibold text-gray-700 mb-3">添加玩家</h2>
+		<div class="flex items-center space-x-2">
+			<input
+					class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					id="playerNameInput"
+					placeholder="输入玩家姓名"
+					type="text"
+			/>
+			<button
+					class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition flex items-center space-x-1 flex-shrink-0 whitespace-nowrap"
+					id="addPlayerBtn"
+			>
+				<i class="fas fa-user-plus"> </i>
+				<span> 添加 </span>
+			</button>
+		</div>
+	</div>
 
-    <!-- 玩家列表区域 -->
-    <div class="mb-4 p-4 border border-gray-200 rounded-md">
-        <div class="flex justify-between items-center mb-3">
-            <h2 class="text-xl font-semibold text-gray-700">玩家列表</h2>
-            <div class="flex space-x-2">
-                <button id="sortNameBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition">
-                    <i class="fas fa-sort-alpha-down mr-1"></i>姓名
-                </button>
-                <button id="sortScoreBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition">
-                    <i class="fas fa-sort-numeric-down mr-1"></i>分数
-                </button>
-            </div>
-        </div>
-        <div class="space-y-3" id="playerList">
-            <!-- 玩家卡片将在这里动态生成 -->
-            <p class="text-gray-500 text-center py-6">暂无玩家，请添加玩家开始游戏。</p>
-        </div>
-    </div>
+	<!-- 玩家列表区域 -->
+	<div class="mb-4 p-4 border border-gray-200 rounded-md">
+		<div class="flex justify-between items-center mb-3">
+			<h2 class="text-xl font-semibold text-gray-700">玩家列表</h2>
+			<div class="flex space-x-2">
+				<button id="sortNameBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition whitespace-nowrap">
+					<i class="fas fa-sort-alpha-down mr-1"></i>姓名
+				</button>
+				<button id="sortScoreBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition whitespace-nowrap">
+					<i class="fas fa-sort-numeric-down mr-1"></i>分数
+				</button>
+			</div>
+		</div>
+		<div class="space-y-3" id="playerList">
+			<!-- 玩家卡片将在这里动态生成 -->
+			<p class="text-gray-500 text-center py-6">暂无玩家，请添加玩家开始游戏。</p>
+		</div>
+	</div>
 </main>
 
 <!-- 自定义提示框 -->
-<div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 hidden max-w-xs text-center"></div>
+<div id="toast"
+     class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 hidden max-w-xs text-center"></div>
 
 <!-- 规则模态框 -->
-<div id="rulesModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-5 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="text-xl font-bold text-gray-800">游戏规则</h3>
-            <button id="closeRulesBtn" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="text-gray-700 space-y-2 text-sm">
-            <p>1. 玩家输了酒局时，添加相应分数</p>
-            <p>2. 玩家喝掉一杯酒时，减去20分</p>
-            <p>3. 当分数达到清酒线（默认20分）时，需要喝酒</p>
-            <p>4. 分数不足时喝酒会产生负分，代表"欠酒"</p>
-            <p>5. 可以在设置中修改清酒线分数</p>
-        </div>
-    </div>
+<div id="rulesModal"
+     class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+	<div class="bg-white rounded-lg p-5 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+		<div class="flex justify-between items-center mb-3">
+			<h3 class="text-xl font-bold text-gray-800">游戏规则</h3>
+			<button id="closeRulesBtn" class="text-gray-500 hover:text-gray-700">
+				<i class="fas fa-times text-xl"></i>
+			</button>
+		</div>
+		<div class="text-gray-700 space-y-2 text-sm">
+			<p>1. 玩家输了酒局时，添加相应分数</p>
+			<p>2. 玩家喝掉一杯酒时，减去20分</p>
+			<p>3. 当分数达到清酒线（默认20分）时，需要喝酒</p>
+			<p>4. 分数不足时喝酒会产生负分，代表"欠酒"</p>
+			<p>5. 可以在设置中修改清酒线分数</p>
+		</div>
+	</div>
 </div>
 
 <!-- 设置模态框 -->
-<div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="text-xl font-bold text-gray-800">设置</h3>
-            <button id="closeSettingsBtn" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-4">
-            <div>
-                <label class="block text-gray-700 mb-1 text-sm">清酒线分数</label>
-                <input type="number" id="thresholdInput" min="1" class="w-full p-2 border border-gray-300 rounded-md" value="20">
-            </div>
-            <button id="saveSettingsBtn" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
-                保存设置
-            </button>
-        </div>
-    </div>
+<div id="settingsModal"
+     class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+	<div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
+		<div class="flex justify-between items-center mb-3">
+			<h3 class="text-xl font-bold text-gray-800">设置</h3>
+			<button id="closeSettingsBtn" class="text-gray-500 hover:text-gray-700">
+				<i class="fas fa-times text-xl"></i>
+			</button>
+		</div>
+		<div class="space-y-4">
+			<div>
+				<label class="block text-gray-700 mb-1 text-sm">清酒线分数</label>
+				<input type="number" id="thresholdInput" min="1" class="w-full p-2 border border-gray-300 rounded-md"
+				       value="20">
+			</div>
+			<div>
+				<label class="block text-gray-700 mb-1 text-sm">快捷分数选项 (用逗号分隔)</label>
+				<input type="text" id="quickScoresInput" class="w-full p-2 border border-gray-300 rounded-md"
+				       placeholder="例如: 1, 5, 10">
+			</div>
+			<button id="saveSettingsBtn"
+			        class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+				保存设置
+			</button>
+		</div>
+	</div>
 </div>
 
 <!-- 确认对话框 -->
-<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
-        <h3 class="text-xl font-bold text-gray-800 mb-3" id="confirmTitle">确认操作</h3>
-        <p class="text-gray-700 mb-4" id="confirmMessage">你确定要执行此操作吗？</p>
-        <div class="flex space-x-3">
-            <button id="cancelConfirmBtn" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition">
-                取消
-            </button>
-            <button id="confirmActionBtn" class="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
-                确认
-            </button>
-        </div>
-    </div>
+<div id="confirmModal"
+     class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+	<div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
+		<h3 class="text-xl font-bold text-gray-800 mb-3" id="confirmTitle">确认操作</h3>
+		<p class="text-gray-700 mb-4" id="confirmMessage">你确定要执行此操作吗？</p>
+		<div class="flex space-x-3">
+			<button id="cancelConfirmBtn"
+			        class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition">
+				取消
+			</button>
+			<button id="confirmActionBtn"
+			        class="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+				确认
+			</button>
+		</div>
+	</div>
 </div>
 
 <script>
     // 全局设置
     let settings = {
-        threshold: 20 // 清酒线分数
+        threshold: 20, // 清酒线分数
+        quickScores: [1, 5, 10] // 默认快捷分数
     };
 
     // 存储玩家数据的数组
     let players = [];
+
+    // 头像背景色池
+    const avatarColors = [
+        '#EF4444', '#F97316', '#F59E0B', '#84CC16', '#10B981',
+        '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF',
+        '#F43F5E', '#64748B'
+    ];
+
+    function getRandomColor() {
+        return avatarColors[Math.floor(Math.random() * avatarColors.length)];
+    }
 
     // DOM 元素
     const playerNameInput = document.getElementById('playerNameInput');
@@ -169,6 +212,7 @@
     const settingsModal = document.getElementById('settingsModal');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const thresholdInput = document.getElementById('thresholdInput');
+    const quickScoresInput = document.getElementById('quickScoresInput');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const confirmModal = document.getElementById('confirmModal');
     const confirmTitle = document.getElementById('confirmTitle');
@@ -190,6 +234,7 @@
 
         // 初始化设置输入框
         thresholdInput.value = settings.threshold;
+        quickScoresInput.value = settings.quickScores.join(', ');
     });
 
     // 设置事件监听器
@@ -198,17 +243,18 @@
         addPlayerBtn.addEventListener('click', addPlayer);
 
         // 按回车键添加玩家
-        playerNameInput.addEventListener('keypress', function(e) {
+        playerNameInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 addPlayer();
             }
         });
 
         // 重置所有玩家分数
-        resetAllBtn.addEventListener('click', function() {
-            showConfirm('重置所有', '确定要重置所有玩家的分数吗？', function() {
+        resetAllBtn.addEventListener('click', function () {
+            showConfirm('重置所有', '确定要重置所有玩家的分数吗？', function () {
                 players.forEach(player => {
                     player.score = 0;
+                    player.totalScore = 0;
                 });
                 savePlayers();
                 renderPlayers();
@@ -225,14 +271,28 @@
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
 
         // 保存设置
-        saveSettingsBtn.addEventListener('click', function() {
+        saveSettingsBtn.addEventListener('click', function () {
             const newThreshold = parseInt(thresholdInput.value);
+            const quickScoresStr = quickScoresInput.value.trim();
+
             if (newThreshold && newThreshold > 0) {
                 settings.threshold = newThreshold;
+
+                // 处理快捷分数
+                if (quickScoresStr) {
+                    const scores = quickScoresStr.split(/[,，]/) // 支持中英文逗号
+                        .map(s => parseInt(s.trim()))
+                        .filter(n => !isNaN(n) && n > 0);
+
+                    if (scores.length > 0) {
+                        settings.quickScores = scores;
+                    }
+                }
+
                 saveSettings();
                 settingsModal.classList.add('hidden');
-                showToast(`清酒线已设置为 ${newThreshold} 分`);
-                renderPlayers(); // 重新渲染以更新提示
+                showToast('设置已保存');
+                renderPlayers(); // 重新渲染以更新提示和快捷按钮
             } else {
                 showToast('请输入有效的分数');
             }
@@ -253,13 +313,13 @@
         });
 
         // 排序按钮
-        sortNameBtn.addEventListener('click', function() {
+        sortNameBtn.addEventListener('click', function () {
             players.sort((a, b) => a.name.localeCompare(b.name));
             renderPlayers();
             showToast('已按姓名排序');
         });
 
-        sortScoreBtn.addEventListener('click', function() {
+        sortScoreBtn.addEventListener('click', function () {
             players.sort((a, b) => b.score - a.score);
             renderPlayers();
             showToast('已按分数排序');
@@ -279,7 +339,9 @@
             const newPlayer = {
                 id: Date.now(),
                 name: name,
-                score: 0
+                score: 0,
+                totalScore: 0,
+                color: getRandomColor()
             };
 
             players.push(newPlayer);
@@ -304,27 +366,75 @@
             return;
         }
 
+        // 计算首字出现次数，用于处理头像歧义
+        const firstCharCounts = {};
+        players.forEach(p => {
+            if (p.name) {
+                const firstChar = p.name.charAt(0);
+                firstCharCounts[firstChar] = (firstCharCounts[firstChar] || 0) + 1;
+            }
+        });
+
         players.forEach(player => {
             const isOverThreshold = player.score >= settings.threshold;
             const playerCard = document.createElement('div');
             playerCard.className = 'bg-gray-50 p-3 rounded-md shadow-sm flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2';
+
+            // 智能头像显示逻辑
+            let avatarText = '?';
+            let avatarFontSize = 'text-xl'; // 默认字体大小
+            if (player.name) {
+                const firstChar = player.name.charAt(0);
+                // 如果首字重复（如都姓王），则显示后两个字（如果名字够长）
+                if (firstCharCounts[firstChar] > 1) {
+                    if (player.name.length > 2) {
+                        avatarText = player.name.slice(-2);
+                        avatarFontSize = 'text-sm'; // 字数多了缩小字体
+                    } else {
+                        avatarText = player.name; // 名字短直接显示全名
+                        if (player.name.length > 1) avatarFontSize = 'text-lg';
+                    }
+                } else {
+                    avatarText = firstChar;
+                }
+            }
+
+            // 生成快捷分数按钮 HTML
+            const quickButtonsHtml = settings.quickScores.map(score => `
+                <button class="text-xs bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 px-2.5 py-0.5 rounded-full quick-score transition shadow-sm min-w-[1.5rem]" data-val="${score}" data-id="${player.id}">${score}</button>
+            `).join('');
+
             playerCard.innerHTML = `
-                    <div class="flex-grow text-center sm:text-left">
-                        <h3 class="text-base font-semibold text-gray-800">${player.name}</h3>
-                        <p class="text-gray-600">当前分数: <span class="font-bold text-lg ${isOverThreshold ? 'text-red-600' : 'text-green-600'}">${player.score}</span></p>
-                        <p class="text-xs text-gray-500">${isOverThreshold ? `已达清酒线(${settings.threshold}分)！` : ''}</p>
+                    <div class="flex-grow flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${avatarFontSize} shadow-sm flex-shrink-0 transition-all duration-300" style="background-color: ${player.color}">
+                            ${avatarText}
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-base font-semibold text-gray-800">${player.name}</h3>
+                            <div class="text-gray-600 text-sm">当前分数: <span class="font-bold text-lg ${isOverThreshold ? 'text-red-600' : 'text-green-600'}">${player.score}</span></div>
+                            <div class="flex items-center space-x-2">
+                                <p class="text-xs text-gray-500">累计: ${player.totalScore || 0}分</p>
+                                <p class="text-xs text-gray-500">${isOverThreshold ? `<span class="text-red-500 font-semibold">已达清酒线!</span>` : ''}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap items-center justify-center gap-1">
-                        <input type="number" placeholder="分数" value="1" min="1" class="w-16 p-1 border border-gray-300 rounded-md text-center text-gray-700 score-input" data-id="${player.id}">
-                        <button data-id="${player.id}" data-action="lose" class="score-btn bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition flex items-center text-sm">
-                            <i class="fas fa-minus mr-1"></i>输了
-                        </button>
-                        <button data-id="${player.id}" data-action="drink" class="score-btn bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition flex items-center text-sm">
-                            <i class="fas fa-beer-mug-empty mr-1"></i>喝了
-                        </button>
-                        <button data-id="${player.id}" data-action="delete" class="delete-btn bg-gray-300 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-400 transition flex items-center text-sm">
-                            <i class="fas fa-trash mr-1"></i>删除
-                        </button>
+                    <div class="flex flex-col items-end gap-1 mt-2 sm:mt-0">
+                         <div class="flex space-x-1 mb-1 items-center">
+                            <span class="text-xs text-gray-400 self-center mr-1">快捷:</span>
+                            ${quickButtonsHtml}
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-1">
+                            <input type="number" placeholder="分数" value="1" min="1" class="w-14 p-1 border border-gray-300 rounded-md text-center text-gray-700 score-input" data-id="${player.id}">
+                            <button data-id="${player.id}" data-action="lose" class="score-btn bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition flex items-center text-sm shadow-sm whitespace-nowrap">
+                                <i class="fas fa-plus mr-1"></i>输了
+                            </button>
+                            <button data-id="${player.id}" data-action="drink" class="score-btn bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition flex items-center text-sm shadow-sm whitespace-nowrap">
+                                <i class="fas fa-beer-mug-empty mr-1"></i>喝了
+                            </button>
+                            <button data-id="${player.id}" data-action="delete" class="delete-btn bg-gray-200 text-gray-600 px-2 py-1 rounded-md hover:bg-gray-300 transition flex items-center text-sm whitespace-nowrap">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
             playerList.appendChild(playerCard);
@@ -337,6 +447,21 @@
 
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', deletePlayer);
+        });
+
+        // 快捷分数按钮监听器
+        document.querySelectorAll('.quick-score').forEach(button => {
+            button.addEventListener('click', function () {
+                const val = this.dataset.val;
+                const id = this.dataset.id;
+                const input = document.querySelector(`.score-input[data-id="${id}"]`);
+                if (input) {
+                    input.value = val;
+                    // 可选：添加动画效果提示已选择
+                    input.classList.add('ring-2', 'ring-blue-400');
+                    setTimeout(() => input.classList.remove('ring-2', 'ring-blue-400'), 200);
+                }
+            });
         });
     }
 
@@ -361,13 +486,13 @@
             }
 
             player.score += scoreToAdd;
+            player.totalScore = (player.totalScore || 0) + scoreToAdd;
             showToast(`${player.name} 分数增加了 ${scoreToAdd} 分`);
 
             if (player.score >= settings.threshold) {
                 showToast(`${player.name} 已达${settings.threshold}分，该清酒一杯了！`);
             }
-        }
-        else if (action === 'drink') {
+        } else if (action === 'drink') {
             const previousScore = player.score;
             player.score -= settings.threshold;
 
@@ -389,7 +514,7 @@
         const player = players.find(p => p.id === playerId);
 
         if (player) {
-            showConfirm('删除玩家', `确定要删除玩家"${player.name}"吗？`, function() {
+            showConfirm('删除玩家', `确定要删除玩家"${player.name}"吗？`, function () {
                 players = players.filter(p => p.id !== playerId);
                 savePlayers();
                 renderPlayers();
@@ -432,6 +557,20 @@
         const storedPlayers = localStorage.getItem('drinkingGamePlayers');
         if (storedPlayers) {
             players = JSON.parse(storedPlayers);
+            // 确保旧数据也有颜色和累计分数
+            let updated = false;
+            players.forEach(p => {
+                if (!p.color) {
+                    p.color = getRandomColor();
+                    updated = true;
+                }
+                // 初始化累计分数，如果不存在则设为当前分数（因为无法追溯历史）
+                if (typeof p.totalScore === 'undefined') {
+                    p.totalScore = p.score;
+                    updated = true;
+                }
+            });
+            if (updated) savePlayers();
         }
     }
 
@@ -444,7 +583,13 @@
     function loadSettings() {
         const storedSettings = localStorage.getItem('drinkingGameSettings');
         if (storedSettings) {
-            settings = JSON.parse(storedSettings);
+            const parsed = JSON.parse(storedSettings);
+            // 合并默认设置，确保新字段存在
+            settings = {...settings, ...parsed};
+            // 确保quickScores是数组
+            if (!Array.isArray(settings.quickScores)) {
+                settings.quickScores = [1, 5, 10];
+            }
         }
     }
 
@@ -466,6 +611,7 @@
 
     var nativeElementQuerySelector = Element.prototype.querySelector;
     var nativeDocumentQuerySelector = Document.prototype.querySelector;
+
     function ytCustomQuerySelector(selector) {
         var foundElement = this === document ? nativeDocumentQuerySelector.call(this, selector) : nativeElementQuerySelector.call(this, selector);
         if (foundElement) {
@@ -489,6 +635,7 @@
     Element.prototype.querySelector = ytCustomQuerySelector;
 
     var nativeElementInsertBefore = Element.prototype.insertBefore;
+
     function ytCustomInsertBefore(newNode, referenceNode) {
         var defaultParentNode = this;
 
@@ -540,6 +687,7 @@
         style.innerHTML = cssText;
         document.head.appendChild(style);
     }
+
     addUniqueStyle('.yt-a-defalut-link[custom-a="true"] > * { margin:0;flex:1; }');
 </script>
 </body>
