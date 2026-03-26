@@ -1,694 +1,1693 @@
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="system">
 <head>
-	<meta charset="utf-8"/>
-	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-	<title>李寨村饮酒记分系统</title>
-	<script src="https://cdn.tailwindcss.com"></script>
-	<link
-			href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-			rel="stylesheet"
-	/>
-	<style>
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>饮酒记分系统</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    /* ===========================
+       CSS 设计系统 — 变量与令牌
+    =========================== */
+    :root {
+      --brand-primary: #f97316;
+      --brand-primary-dark: #ea580c;
+      --brand-primary-light: #fed7aa;
+      --brand-secondary: #3b82f6;
+      --brand-danger: #ef4444;
+      --brand-success: #22c55e;
+      --brand-warning: #f59e0b;
+      --brand-banker: #8b5cf6;   /* 庄家紫 */
 
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
+      --bg-page: #f5f5f4;
+      --bg-card: #ffffff;
+      --bg-card-hover: #fafaf9;
+      --bg-inset: #f5f5f4;
+      --bg-overlay: rgba(0,0,0,0.45);
 
-        .toast-enter {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
+      --text-primary: #1c1917;
+      --text-secondary: #57534e;
+      --text-muted: #a8a29e;
+      --text-inverse: #ffffff;
 
-        .toast-exit {
-            animation: fadeOut 0.3s ease-in forwards;
-        }
+      --border-default: #e7e5e4;
+      --border-focus: #f97316;
 
-        .modal-backdrop {
-            backdrop-filter: blur(3px);
-        }
-	</style>
+      --score-positive: #dc2626;
+      --score-negative: #16a34a;
+
+      --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem;
+      --sp-4: 1rem;    --sp-5: 1.25rem; --sp-6: 1.5rem;
+      --sp-8: 2rem;    --sp-10: 2.5rem; --sp-12: 3rem;
+
+      --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem;
+      --text-lg: 1.125rem; --text-xl: 1.25rem; --text-2xl: 1.5rem;
+      --text-3xl: 1.875rem;
+
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --radius-xl: 24px; --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+
+      --trans-fast: 0.15s ease;
+      --trans-base: 0.25s ease;
+      --trans-slow: 0.35s ease;
+
+      --container-max: 680px;
+      --header-height: 64px;
+    }
+
+    [data-theme="dark"], [data-theme="system"] {
+      --bg-page: #1c1917; --bg-card: #292524; --bg-card-hover: #2e2b28;
+      --bg-inset: #1c1917; --bg-overlay: rgba(0,0,0,0.65);
+      --text-primary: #fafaf9; --text-secondary: #a8a29e; --text-muted: #78716c;
+      --border-default: #3f3b38;
+      --score-positive: #f87171; --score-negative: #4ade80;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    @media (prefers-color-scheme: light) {
+      [data-theme="system"] {
+        --bg-page: #f5f5f4; --bg-card: #ffffff; --bg-card-hover: #fafaf9;
+        --bg-inset: #f5f5f4; --bg-overlay: rgba(0,0,0,0.45);
+        --text-primary: #1c1917; --text-secondary: #57534e; --text-muted: #a8a29e;
+        --border-default: #e7e5e4;
+        --score-positive: #dc2626; --score-negative: #16a34a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background var(--trans-slow), color var(--trans-slow);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container { max-width: var(--container-max); margin: 0 auto; padding: 0 var(--sp-4); }
+
+    /* 头部 */
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-default);
+      box-shadow: var(--shadow-sm);
+      transition: background var(--trans-slow), border-color var(--trans-slow);
+    }
+    .app-header-inner {
+      max-width: var(--container-max); margin: 0 auto; padding: 0 var(--sp-4);
+      height: var(--header-height); display: flex; align-items: center;
+      justify-content: space-between; gap: var(--sp-3);
+    }
+    .app-logo { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
+    .app-logo-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--brand-primary), #fb923c);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-lg); box-shadow: var(--shadow-sm);
+    }
+    .app-title { font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); line-height: 1; }
+    .app-subtitle { font-size: var(--text-xs); color: var(--text-muted); line-height: 1; margin-top: 2px; }
+
+    .theme-toggle {
+      display: flex; align-items: center; background: var(--bg-inset);
+      border: 1px solid var(--border-default); border-radius: var(--radius-full);
+      padding: 3px; gap: 2px;
+    }
+    .theme-btn {
+      padding: 5px 8px; border-radius: var(--radius-full); border: none;
+      background: transparent; color: var(--text-muted); cursor: pointer;
+      font-size: 13px; transition: all var(--trans-fast); line-height: 1;
+    }
+    .theme-btn:hover { color: var(--text-secondary); }
+    .theme-btn.active { background: var(--brand-primary); color: white; box-shadow: var(--shadow-sm); }
+
+    .header-actions { display: flex; align-items: center; gap: var(--sp-2); }
+    .icon-btn {
+      width: 34px; height: 34px; border-radius: var(--radius-md);
+      border: 1px solid var(--border-default); background: var(--bg-inset);
+      color: var(--text-secondary); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; font-size: 14px;
+      transition: all var(--trans-fast);
+    }
+    .icon-btn:hover { background: var(--bg-card); color: var(--text-primary); border-color: var(--brand-primary); }
+    .icon-btn.danger:hover { border-color: var(--brand-danger); color: var(--brand-danger); }
+
+    /* 主内容 */
+    .app-main { padding: var(--sp-5) 0 var(--sp-12); }
+
+    /* 统计面板 */
+    .stats-panel {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-3); margin-bottom: var(--sp-5);
+    }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg); padding: var(--sp-4) var(--sp-3);
+      text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .stat-card-value { font-size: var(--text-2xl); font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: var(--sp-1); }
+    .stat-card-label { font-size: var(--text-xs); color: var(--text-muted); }
+    .stat-card-value.alert { color: var(--brand-danger); }
+    .stat-card-value.success { color: var(--brand-success); }
+    .stat-card-value.banker-color { color: var(--brand-banker); }
+
+    /* 区块 */
+    .section {
+      background: var(--bg-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg); overflow: hidden;
+      margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm);
+    }
+    .section-header {
+      padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border-default);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-title {
+      font-size: var(--text-base); font-weight: 600; color: var(--text-primary);
+      display: flex; align-items: center; gap: var(--sp-2);
+    }
+    .section-title i { color: var(--brand-primary); }
+    .section-body { padding: var(--sp-4) var(--sp-5); }
+
+    .add-player-row { display: flex; gap: var(--sp-3); }
+    .text-input {
+      flex: 1; padding: var(--sp-3) var(--sp-4);
+      border: 1.5px solid var(--border-default); border-radius: var(--radius-md);
+      background: var(--bg-inset); color: var(--text-primary);
+      font-size: var(--text-base); outline: none;
+      transition: border-color var(--trans-fast), box-shadow var(--trans-fast);
+    }
+    .text-input::placeholder { color: var(--text-muted); }
+    .text-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(249,115,22,0.15); background: var(--bg-card); }
+
+    /* 按钮系统 */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border: none;
+      border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: all var(--trans-fast); line-height: 1;
+    }
+    .btn-primary { background: var(--brand-primary); color: white; }
+    .btn-primary:hover { background: var(--brand-primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-danger { background: var(--brand-danger); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-ghost { background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); }
+    .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+    .btn-banker-style { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white; }
+    .btn-banker-style:hover { background: linear-gradient(135deg, #7c3aed, #8b5cf6); transform: translateY(-1px); }
+    .btn-sm { padding: var(--sp-2) var(--sp-3); font-size: var(--text-xs); border-radius: var(--radius-sm); }
+
+    /* 排序控制 */
+    .sort-controls { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+    .sort-btn {
+      padding: 5px 10px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default); background: var(--bg-inset);
+      color: var(--text-secondary); font-size: var(--text-xs); cursor: pointer;
+      transition: all var(--trans-fast);
+    }
+    .sort-btn:hover, .sort-btn.active-sort { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: var(--sp-12) var(--sp-6); }
+    .empty-state-icon { font-size: 3rem; margin-bottom: var(--sp-4); opacity: 0.4; }
+    .empty-state-title { font-size: var(--text-lg); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--sp-2); }
+    .empty-state-desc { font-size: var(--text-sm); color: var(--text-muted); line-height: 1.6; }
+
+    /* ==========================
+       玩家列表 & 拖拽排序
+    ========================== */
+    .player-list { display: flex; flex-direction: column; gap: var(--sp-3); }
+
+    /* 庄家卡片特殊样式 */
+    .player-card {
+      background: var(--bg-card); border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-lg); overflow: hidden;
+      transition: border-color var(--trans-base), box-shadow var(--trans-base), opacity 0.2s;
+      animation: slideIn 0.3s ease-out;
+      user-select: none;
+    }
+    .player-card:hover { box-shadow: var(--shadow-md); }
+
+    .player-card.is-banker {
+      border-color: var(--brand-banker);
+      box-shadow: 0 0 0 2px rgba(139,92,246,0.25), var(--shadow-sm);
+      order: -1;
+    }
+    .player-card.is-banker .player-card-header {
+      background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(167,139,250,0.05));
+    }
+    [data-theme="dark"] .player-card.is-banker .player-card-header,
+    [data-theme="system"] .player-card.is-banker .player-card-header {
+      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(167,139,250,0.08));
+    }
+
+    .player-card.over-threshold {
+      border-color: var(--brand-danger);
+      box-shadow: 0 0 0 1px var(--brand-danger), var(--shadow-sm);
+    }
+    .player-card.over-threshold.is-banker {
+      border-color: var(--brand-banker);
+      box-shadow: 0 0 0 2px rgba(139,92,246,0.3), var(--shadow-sm);
+    }
+    .player-card.over-threshold .player-card-header { background: #fef2f2; }
+    .player-card.over-threshold.is-banker .player-card-header {
+      background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(167,139,250,0.05));
+    }
+    [data-theme="dark"] .player-card.over-threshold .player-card-header,
+    [data-theme="system"] .player-card.over-threshold .player-card-header { background: #450a0a; }
+    @media (prefers-color-scheme: light) {
+      [data-theme="system"] .player-card.over-threshold .player-card-header { background: #fef2f2; }
+    }
+
+    /* 拖拽状态 */
+    .player-card.dragging { opacity: 0.4; box-shadow: var(--shadow-lg); }
+    .player-card.drag-over { border-color: var(--brand-secondary); box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+
+    /* 拖拽把手 */
+    .drag-handle {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); cursor: grab; font-size: 14px; flex-shrink: 0;
+      border-radius: var(--radius-sm); transition: color var(--trans-fast);
+      touch-action: none;
+    }
+    .drag-handle:hover { color: var(--text-secondary); }
+    .drag-handle:active { cursor: grabbing; }
+
+    /* 卡片头部 */
+    .player-card-header {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-4) var(--sp-4) var(--sp-3);
+      transition: background var(--trans-slow);
+    }
+
+    /* 庄家皇冠标识 */
+    .banker-crown {
+      position: relative; display: inline-flex;
+    }
+    .banker-badge {
+      position: absolute; top: -8px; right: -8px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: white; font-size: 10px; font-weight: 800;
+      padding: 1px 4px; border-radius: var(--radius-full);
+      white-space: nowrap; box-shadow: 0 1px 4px rgba(245,158,11,0.5);
+      border: 1.5px solid white; line-height: 1.4;
+    }
+
+    .player-avatar {
+      width: 44px; height: 44px; border-radius: var(--radius-full);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: var(--text-base); color: white;
+      flex-shrink: 0; letter-spacing: -0.5px; box-shadow: var(--shadow-sm);
+    }
+    .player-avatar.banker-avatar { box-shadow: 0 0 0 2.5px #8b5cf6, var(--shadow-sm); }
+
+    .player-info { flex: 1; min-width: 0; }
+    .player-name {
+      font-size: var(--text-base); font-weight: 700; color: var(--text-primary);
+      line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .player-name-banker { color: var(--brand-banker); }
+    .player-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+
+    .player-score-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+    .player-score { font-size: var(--text-3xl); font-weight: 800; line-height: 1; transition: color var(--trans-fast); }
+    .player-score.normal { color: var(--text-primary); }
+    .player-score.warning { color: var(--score-positive); }
+
+    .score-badge {
+      font-size: var(--text-xs); font-weight: 600; padding: 2px 8px;
+      border-radius: var(--radius-full); white-space: nowrap;
+    }
+    .score-badge.danger { background: var(--brand-danger); color: white; animation: pulse 1.5s ease-in-out infinite; }
+    .score-badge.muted { background: var(--bg-inset); color: var(--text-muted); border: 1px solid var(--border-default); }
+    .score-badge.banker-tag { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white; }
+
+    .player-divider { height: 1px; background: var(--border-default); margin: 0 var(--sp-4); }
+
+    .player-card-actions { padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
+
+    .quick-scores-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+    .quick-label { font-size: var(--text-xs); color: var(--text-muted); flex-shrink: 0; }
+    .quick-chip {
+      padding: 4px 10px; border-radius: var(--radius-full);
+      border: 1.5px solid var(--border-default); background: var(--bg-inset);
+      color: var(--text-secondary); font-size: var(--text-xs); font-weight: 600;
+      cursor: pointer; transition: all var(--trans-fast);
+    }
+    .quick-chip:hover, .quick-chip.selected { border-color: var(--brand-secondary); color: var(--brand-secondary); background: rgba(59,130,246,0.08); }
+
+    .actions-row { display: flex; align-items: center; gap: var(--sp-2); }
+    .score-input {
+      width: 60px; padding: var(--sp-2) var(--sp-3);
+      border: 1.5px solid var(--border-default); border-radius: var(--radius-md);
+      background: var(--bg-inset); color: var(--text-primary);
+      font-size: var(--text-sm); font-weight: 600; text-align: center; outline: none;
+      transition: border-color var(--trans-fast);
+    }
+    .score-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
+
+    .btn-lose {
+      flex: 1; background: #fee2e2; color: #dc2626; border: 1.5px solid #fca5a5; font-weight: 700;
+    }
+    .btn-lose:hover { background: #fecaca; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(220,38,38,0.2); }
+    .btn-drink {
+      flex: 1; background: #dcfce7; color: #16a34a; border: 1.5px solid #86efac; font-weight: 700;
+    }
+    .btn-drink:hover { background: #bbf7d0; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(22,163,74,0.2); }
+
+    [data-theme="dark"] .btn-lose, [data-theme="system"] .btn-lose { background: rgba(220,38,38,0.15); color: #f87171; border-color: rgba(220,38,38,0.3); }
+    [data-theme="dark"] .btn-drink, [data-theme="system"] .btn-drink { background: rgba(22,163,74,0.15); color: #4ade80; border-color: rgba(22,163,74,0.3); }
+    @media (prefers-color-scheme: light) {
+      [data-theme="system"] .btn-lose { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+      [data-theme="system"] .btn-drink { background: #dcfce7; color: #16a34a; border-color: #86efac; }
+    }
+
+    .btn-action {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: var(--sp-2) var(--sp-4); border-radius: var(--radius-md);
+      font-size: var(--text-sm); cursor: pointer; transition: all var(--trans-fast); border: none;
+    }
+    .btn-delete {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-default); background: var(--bg-inset);
+      color: var(--text-muted); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; font-size: 13px;
+      flex-shrink: 0; transition: all var(--trans-fast);
+    }
+    .btn-delete:hover { border-color: var(--brand-danger); color: var(--brand-danger); background: #fee2e2; }
+
+    /* 庄家按钮行 */
+    .banker-actions-row {
+      display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1);
+    }
+    .btn-set-banker {
+      flex: 1; padding: var(--sp-2) var(--sp-3);
+      border: 1.5px dashed var(--brand-banker); color: var(--brand-banker);
+      background: rgba(139,92,246,0.06); border-radius: var(--radius-md);
+      font-size: var(--text-xs); font-weight: 600; cursor: pointer;
+      transition: all var(--trans-fast); display: flex; align-items: center;
+      justify-content: center; gap: 5px;
+    }
+    .btn-set-banker:hover { background: rgba(139,92,246,0.12); }
+    .btn-set-banker.is-current-banker {
+      border-style: solid; background: rgba(139,92,246,0.12);
+      cursor: default; opacity: 0.7;
+    }
+    .btn-settle {
+      padding: var(--sp-2) var(--sp-4); background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      color: white; border: none; border-radius: var(--radius-md);
+      font-size: var(--text-xs); font-weight: 700; cursor: pointer;
+      transition: all var(--trans-fast); display: flex; align-items: center; gap: 5px;
+      box-shadow: 0 2px 8px rgba(139,92,246,0.3);
+    }
+    .btn-settle:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139,92,246,0.4); }
+
+    /* ==========================
+       历史记录
+    ========================== */
+    .history-list { display: flex; flex-direction: column; gap: var(--sp-2); max-height: 240px; overflow-y: auto; }
+    .history-item {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--sp-3); padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--radius-md); background: var(--bg-inset);
+      border: 1px solid var(--border-default); font-size: var(--text-xs);
+      animation: slideIn 0.2s ease-out;
+    }
+    .history-time { color: var(--text-muted); flex-shrink: 0; }
+    .history-desc { color: var(--text-secondary); flex: 1; }
+    .history-score { font-weight: 700; flex-shrink: 0; }
+    .history-score.pos { color: var(--score-positive); }
+    .history-score.neg { color: var(--score-negative); }
+    .btn-undo {
+      padding: 3px 8px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default); background: var(--bg-card);
+      color: var(--text-secondary); font-size: 11px; cursor: pointer;
+      transition: all var(--trans-fast); white-space: nowrap;
+    }
+    .btn-undo:hover { border-color: var(--brand-warning); color: var(--brand-warning); }
+
+    /* ==========================
+       模态框系统
+    ========================== */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: var(--bg-overlay);
+      backdrop-filter: blur(4px); z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity var(--trans-base);
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+    @media (min-width: 480px) { .modal-backdrop { align-items: center; } }
+
+    .modal-sheet {
+      background: var(--bg-card); border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%; max-width: var(--container-max); max-height: 92vh;
+      overflow-y: auto; transform: translateY(40px); opacity: 0;
+      transition: transform var(--trans-base), opacity var(--trans-base);
+    }
+    @media (min-width: 480px) {
+      .modal-sheet { border-radius: var(--radius-xl); max-height: 85vh; width: calc(100% - 2rem); }
+    }
+    .modal-backdrop.open .modal-sheet { transform: translateY(0); opacity: 1; }
+
+    .modal-handle {
+      width: 40px; height: 4px; border-radius: var(--radius-full);
+      background: var(--border-default); margin: var(--sp-3) auto;
+    }
+    @media (min-width: 480px) { .modal-handle { display: none; } }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border-default);
+    }
+    .modal-title { font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: var(--radius-full);
+      border: none; background: var(--bg-inset); color: var(--text-muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all var(--trans-fast);
+    }
+    .modal-close:hover { background: var(--border-default); color: var(--text-primary); }
+    .modal-body { padding: var(--sp-5); }
+
+    /* 结算弹窗专属样式 */
+    .settle-players-list {
+      display: flex; flex-direction: column; gap: var(--sp-2);
+      margin-bottom: var(--sp-4);
+    }
+    /* 卡片整体 */
+    .settle-player-row {
+      display: flex; flex-direction: column; gap: var(--sp-2);
+      padding: var(--sp-3); border-radius: var(--radius-lg);
+      border: 2px solid var(--border-default); background: var(--bg-inset);
+      transition: all var(--trans-fast);
+    }
+    .settle-player-row:hover { border-color: var(--brand-secondary); }
+    .settle-player-row.selected-banker-big { border-color: var(--brand-danger); background: rgba(239,68,68,0.06); }
+    .settle-player-row.selected-player-big { border-color: var(--brand-success); background: rgba(34,197,94,0.06); }
+    .settle-player-row.selected-escape { border-color: var(--brand-warning); background: rgba(245,158,11,0.06); }
+
+    /* 上半行：头像 + 名字 + 报数 */
+    .settle-row-top {
+      display: flex; align-items: center; gap: var(--sp-2);
+    }
+    .settle-avatar {
+      width: 32px; height: 32px; border-radius: var(--radius-full);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 12px; color: white; flex-shrink: 0;
+    }
+    .settle-player-name {
+      flex: 1; font-weight: 600; font-size: var(--text-sm);
+      color: var(--text-primary); min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* 报数输入区 */
+    .settle-base-wrap {
+      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+    }
+    .settle-base-label {
+      font-size: 11px; color: var(--text-muted); white-space: nowrap;
+    }
+    .settle-base-input {
+      width: 48px; padding: 3px 6px;
+      border: 1.5px solid var(--border-default); border-radius: var(--radius-md);
+      background: var(--bg-card); color: var(--text-primary);
+      font-size: var(--text-sm); font-weight: 700; text-align: center; outline: none;
+    }
+    .settle-base-input:focus { border-color: var(--brand-primary); }
+
+    /* 下半行：选项按钮 */
+    .settle-options {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2);
+    }
+    .settle-opt-btn {
+      padding: 6px 4px; border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-default); background: var(--bg-card);
+      font-size: 13px; font-weight: 700; cursor: pointer; text-align: center;
+      transition: all var(--trans-fast); color: var(--text-secondary); line-height: 1;
+    }
+    .settle-opt-btn:active { transform: scale(0.96); }
+    /* 明 → 绿（玩家赢）*/
+    .settle-opt-btn.opt-player-big { border-color: var(--brand-success); color: var(--brand-success); }
+    .settle-opt-btn.opt-player-big.active { background: var(--brand-success); color: white; box-shadow: 0 2px 8px rgba(34,197,94,0.4); }
+    /* 暗 → 红（庄家赢）*/
+    .settle-opt-btn.opt-banker-big { border-color: var(--brand-danger); color: var(--brand-danger); }
+    .settle-opt-btn.opt-banker-big.active { background: var(--brand-danger); color: white; box-shadow: 0 2px 8px rgba(239,68,68,0.4); }
+    /* 认输 → 橙 */
+    .settle-opt-btn.opt-escape { border-color: var(--brand-warning); color: var(--brand-warning); }
+    .settle-opt-btn.opt-escape.active { background: var(--brand-warning); color: white; box-shadow: 0 2px 8px rgba(245,158,11,0.4); }
+
+    .settle-summary {
+      padding: var(--sp-4); border-radius: var(--radius-lg);
+      background: var(--bg-inset); border: 1px solid var(--border-default);
+      margin-bottom: var(--sp-4); font-size: var(--text-sm); color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .settle-summary strong { color: var(--text-primary); }
+    .settle-summary .sum-item { display: flex; justify-content: space-between; padding: 2px 0; }
+    .sum-add { color: var(--score-positive); font-weight: 700; }
+    .sum-ming { color: var(--brand-success) !important; }
+    .sum-surrender { color: var(--brand-warning) !important; }
+    .sum-banker-total {
+      border-top: 1px solid var(--border-default); margin-top: 4px;
+      padding-top: 6px !important; font-weight: 700; color: var(--brand-banker);
+    }
+    .sum-banker-total .sum-add { color: var(--brand-banker); }
+    .sum-ok { color: var(--score-negative); font-weight: 700; }
+
+    .settle-confirm-btn {
+      width: 100%; padding: var(--sp-4); border: none; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white;
+      font-size: var(--text-base); font-weight: 700; cursor: pointer;
+      transition: all var(--trans-fast); box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+    }
+    .settle-confirm-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(139,92,246,0.4); }
+    .settle-confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .banker-info-bar {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-md);
+      background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);
+      margin-bottom: var(--sp-4);
+    }
+    .banker-info-text { font-size: var(--text-sm); color: var(--brand-banker); font-weight: 600; }
+
+    /* 规则弹窗 */
+    .rule-list { display: flex; flex-direction: column; gap: var(--sp-3); }
+    .rule-item {
+      display: flex; gap: var(--sp-3); padding: var(--sp-3);
+      background: var(--bg-inset); border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+    }
+    .rule-index {
+      width: 24px; height: 24px; border-radius: var(--radius-full);
+      background: var(--brand-primary); color: white; font-size: var(--text-xs);
+      font-weight: 700; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .rule-text { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6; }
+
+    /* 设置弹窗 */
+    .form-group { margin-bottom: var(--sp-5); }
+    .form-label { display: block; font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--sp-2); }
+    .form-hint { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--sp-1); }
+
+    .confirm-actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-5); }
+
+    /* Toast */
+    .toast-container {
+      position: fixed; top: calc(var(--header-height) + var(--sp-3));
+      left: 50%; transform: translateX(-50%); z-index: 400;
+      display: flex; flex-direction: column; gap: var(--sp-2);
+      pointer-events: none; width: max-content;
+      max-width: min(340px, calc(100vw - 2rem));
+    }
+    .toast {
+      background: var(--text-primary); color: var(--bg-page);
+      padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-lg);
+      font-size: var(--text-sm); font-weight: 500; box-shadow: var(--shadow-lg);
+      text-align: center; animation: toastIn 0.25s ease-out;
+    }
+    .toast.exit { animation: toastOut 0.25s ease-in forwards; }
+
+    /* 动画 */
+    @keyframes slideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(-8px) scale(0.95); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+    @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-8px); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+    @keyframes bankerPulse {
+      0%,100% { box-shadow: 0 0 0 2px rgba(139,92,246,0.25), var(--shadow-sm); }
+      50% { box-shadow: 0 0 0 4px rgba(139,92,246,0.4), var(--shadow-md); }
+    }
+    .player-card.is-banker { animation: bankerPulse 2.5s ease-in-out infinite; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
+
+    /* 响应式 */
+    @media (max-width: 400px) {
+      .stats-panel { grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
+      .stat-card { padding: var(--sp-3) var(--sp-2); }
+      .stat-card-value { font-size: var(--text-xl); }
+      .header-actions { gap: var(--sp-1); }
+      .icon-btn { width: 30px; height: 30px; font-size: 13px; }
+      .theme-btn { padding: 4px 6px; font-size: 11px; }
+    }
+    @media (max-width: 360px) {
+      .settle-options { flex-direction: column; align-items: stretch; }
+      .settle-opt-btn { text-align: center; }
+    }
+
+    /* 折叠屏适配 */
+    @media (max-height: 550px) and (orientation: landscape) {
+      .app-header { position: relative; }
+      .app-main { padding-top: var(--sp-3); }
+      .modal-sheet { max-height: 95vh; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 font-sans">
-<!-- 顶部标题栏 -->
-<header class="sticky top-0 bg-white shadow-md rounded-lg p-4 mb-4 z-10">
-	<h1 class="text-2xl font-bold text-center text-gray-800">
-		喝酒记分系统
-	</h1>
-	<div class="flex justify-center mt-2 space-x-3">
-		<button id="resetAllBtn"
-		        class="text-sm bg-amber-500 text-white px-3 py-1 rounded-md hover:bg-amber-600 transition whitespace-nowrap">
-			<i class="fas fa-rotate-left mr-1"></i>重置所有
-		</button>
-		<button id="rulesBtn" class="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition whitespace-nowrap">
-			<i class="fas fa-info-circle mr-1"></i>游戏规则
-		</button>
-		<button id="settingsBtn"
-		        class="text-sm bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition whitespace-nowrap">
-			<i class="fas fa-cog mr-1"></i>设置
-		</button>
-	</div>
+<body>
+
+<!-- ===================== 顶部导航 ===================== -->
+<header class="app-header">
+  <div class="app-header-inner">
+    <div class="app-logo">
+      <div class="app-logo-icon">🍺</div>
+      <div>
+        <div class="app-title">记分系统</div>
+        <div class="app-subtitle">李寨村饮酒记分</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="theme-toggle" role="radiogroup" aria-label="主题">
+        <button class="theme-btn" data-theme-val="light" title="浅色">☀️</button>
+        <button class="theme-btn" data-theme-val="dark" title="深色">🌙</button>
+        <button class="theme-btn active" data-theme-val="system" title="跟随系统">💻</button>
+      </div>
+      <button class="icon-btn" id="historyBtn" title="操作历史"><i class="fas fa-clock-rotate-left"></i></button>
+      <button class="icon-btn" id="rulesBtn" title="游戏规则"><i class="fas fa-info-circle"></i></button>
+      <button class="icon-btn" id="settingsBtn" title="设置"><i class="fas fa-cog"></i></button>
+      <button class="icon-btn danger" id="resetAllBtn" title="重置所有分数"><i class="fas fa-rotate-left"></i></button>
+    </div>
+  </div>
 </header>
 
-<main class="bg-white rounded-lg shadow-xl p-4 mb-6">
-	<!-- 添加玩家区域 -->
-	<div class="mb-6 p-4 border border-gray-200 rounded-md">
-		<h2 class="text-xl font-semibold text-gray-700 mb-3">添加玩家</h2>
-		<div class="flex items-center space-x-2">
-			<input
-					class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-					id="playerNameInput"
-					placeholder="输入玩家姓名"
-					type="text"
-			/>
-			<button
-					class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition flex items-center space-x-1 flex-shrink-0 whitespace-nowrap"
-					id="addPlayerBtn"
-			>
-				<i class="fas fa-user-plus"> </i>
-				<span> 添加 </span>
-			</button>
-		</div>
-	</div>
+<!-- ===================== 主内容 ===================== -->
+<main class="app-main">
+  <div class="app-container">
 
-	<!-- 玩家列表区域 -->
-	<div class="mb-4 p-4 border border-gray-200 rounded-md">
-		<div class="flex justify-between items-center mb-3">
-			<h2 class="text-xl font-semibold text-gray-700">玩家列表</h2>
-			<div class="flex space-x-2">
-				<button id="sortNameBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition whitespace-nowrap">
-					<i class="fas fa-sort-alpha-down mr-1"></i>姓名
-				</button>
-				<button id="sortScoreBtn" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition whitespace-nowrap">
-					<i class="fas fa-sort-numeric-down mr-1"></i>分数
-				</button>
-			</div>
-		</div>
-		<div class="space-y-3" id="playerList">
-			<!-- 玩家卡片将在这里动态生成 -->
-			<p class="text-gray-500 text-center py-6">暂无玩家，请添加玩家开始游戏。</p>
-		</div>
-	</div>
+    <!-- 统计面板 -->
+    <div class="stats-panel" id="statsPanel">
+      <div class="stat-card">
+        <div class="stat-card-value" id="statTotal">0</div>
+        <div class="stat-card-label">总玩家</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value alert" id="statAlert">0</div>
+        <div class="stat-card-label">待清酒</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value success" id="statDrank">0</div>
+        <div class="stat-card-label">总杯数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value banker-color" id="statBanker">—</div>
+        <div class="stat-card-label">当前庄家</div>
+      </div>
+    </div>
+
+    <!-- 添加玩家 -->
+    <div class="section" style="margin-bottom: var(--sp-4);">
+      <div class="section-body" style="padding-top: var(--sp-4);">
+        <div class="add-player-row">
+          <input class="text-input" id="playerNameInput" placeholder="输入玩家姓名，回车添加..."
+            type="text" autocomplete="off" maxlength="10"/>
+          <button class="btn btn-primary" id="addPlayerBtn">
+            <i class="fas fa-user-plus"></i><span>添加</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 玩家列表 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title"><i class="fas fa-users"></i> 玩家列表</div>
+        <div class="sort-controls">
+          <button class="sort-btn" id="sortNameBtn"><i class="fas fa-sort-alpha-down"></i> 姓名</button>
+          <button class="sort-btn" id="sortScoreBtn"><i class="fas fa-sort-numeric-down"></i> 分数</button>
+          <button class="sort-btn" id="sortManualBtn" title="手动拖拽排序">
+            <i class="fas fa-grip-vertical"></i> 拖排
+          </button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="player-list" id="playerList">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">🍻</div>
+            <div class="empty-state-title">还没有玩家</div>
+            <div class="empty-state-desc">在上方输入姓名，点击"添加"即可加入游戏<br/>支持多人同时参与，实时追踪分数</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </main>
 
-<!-- 自定义提示框 -->
-<div id="toast"
-     class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 hidden max-w-xs text-center"></div>
+<!-- ===================== Toast 通知 ===================== -->
+<div class="toast-container" id="toastContainer"></div>
 
-<!-- 规则模态框 -->
-<div id="rulesModal"
-     class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
-	<div class="bg-white rounded-lg p-5 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
-		<div class="flex justify-between items-center mb-3">
-			<h3 class="text-xl font-bold text-gray-800">游戏规则</h3>
-			<button id="closeRulesBtn" class="text-gray-500 hover:text-gray-700">
-				<i class="fas fa-times text-xl"></i>
-			</button>
-		</div>
-		<div class="text-gray-700 space-y-2 text-sm">
-			<p>1. 玩家输了酒局时，添加相应分数</p>
-			<p>2. 玩家喝掉一杯酒时，减去20分</p>
-			<p>3. 当分数达到清酒线（默认20分）时，需要喝酒</p>
-			<p>4. 分数不足时喝酒会产生负分，代表"欠酒"</p>
-			<p>5. 可以在设置中修改清酒线分数</p>
-		</div>
-	</div>
+<!-- ===================== 历史记录模态框 ===================== -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📋 操作历史</div>
+      <button class="modal-close" data-close="historyModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="history-list" id="historyList">
+        <div style="text-align:center; color: var(--text-muted); font-size: var(--text-sm); padding: var(--sp-6);">暂无操作记录</div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- 设置模态框 -->
-<div id="settingsModal"
-     class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
-	<div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
-		<div class="flex justify-between items-center mb-3">
-			<h3 class="text-xl font-bold text-gray-800">设置</h3>
-			<button id="closeSettingsBtn" class="text-gray-500 hover:text-gray-700">
-				<i class="fas fa-times text-xl"></i>
-			</button>
-		</div>
-		<div class="space-y-4">
-			<div>
-				<label class="block text-gray-700 mb-1 text-sm">清酒线分数</label>
-				<input type="number" id="thresholdInput" min="1" class="w-full p-2 border border-gray-300 rounded-md"
-				       value="20">
-			</div>
-			<div>
-				<label class="block text-gray-700 mb-1 text-sm">快捷分数选项 (用逗号分隔)</label>
-				<input type="text" id="quickScoresInput" class="w-full p-2 border border-gray-300 rounded-md"
-				       placeholder="例如: 1, 5, 10">
-			</div>
-			<button id="saveSettingsBtn"
-			        class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
-				保存设置
-			</button>
-		</div>
-	</div>
+<!-- ===================== 游戏规则模态框 ===================== -->
+<div class="modal-backdrop" id="rulesModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📖 游戏规则</div>
+      <button class="modal-close" data-close="rulesModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="rule-list">
+        <div class="rule-item"><div class="rule-index">1</div><div class="rule-text">分数越高喝酒越多，赢家不喝酒。</div></div>
+        <div class="rule-item"><div class="rule-index">2</div><div class="rule-text">轮流坐庄，点击玩家卡片上的 <strong>设为庄家</strong> 指定当局庄家，庄家置顶显示。</div></div>
+        <div class="rule-item"><div class="rule-index">3</div><div class="rule-text"><strong>庄家结算</strong>：庄家点击「结算」，对每位玩家选择结果：</div></div>
+        <div class="rule-item"><div class="rule-index">4</div><div class="rule-text"><strong>庄家大</strong>：被选中的玩家各加 <em>基数×2</em> 分（默认+4）。可在结算弹窗调整基数。</div></div>
+        <div class="rule-item"><div class="rule-index">5</div><div class="rule-text"><strong>玩家大</strong>：庄家加 <em>基数×2</em> 分（默认+4）。</div></div>
+        <div class="rule-item"><div class="rule-index">6</div><div class="rule-text"><strong>认输</strong>：该玩家认输，累积 <em>基数</em> 分惩罚（默认+2），从本局结算名单中移除。</div></div>
+        <div class="rule-item"><div class="rule-index">7</div><div class="rule-text">玩家可拖拽排序（按座位依次操作），分数达清酒线（默认20分）时红色提示。</div></div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- 确认对话框 -->
-<div id="confirmModal"
-     class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
-	<div class="bg-white rounded-lg p-5 max-w-md w-full mx-4">
-		<h3 class="text-xl font-bold text-gray-800 mb-3" id="confirmTitle">确认操作</h3>
-		<p class="text-gray-700 mb-4" id="confirmMessage">你确定要执行此操作吗？</p>
-		<div class="flex space-x-3">
-			<button id="cancelConfirmBtn"
-			        class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition">
-				取消
-			</button>
-			<button id="confirmActionBtn"
-			        class="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
-				确认
-			</button>
-		</div>
-	</div>
+<!-- ===================== 设置模态框 ===================== -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">⚙️ 设置</div>
+      <button class="modal-close" data-close="settingsModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="thresholdInput">清酒线分数</label>
+        <input type="number" id="thresholdInput" min="1" class="text-input" value="20" style="width:100%">
+        <div class="form-hint">当玩家分数达到此值时，需要喝一杯酒</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="quickScoresInput">快捷分数选项</label>
+        <input type="text" id="quickScoresInput" class="text-input" placeholder="例如: 1, 5, 10" style="width:100%">
+        <div class="form-hint">用英文逗号或中文逗号分隔，最多显示5个</div>
+      </div>
+      <button id="saveSettingsBtn" class="btn btn-primary" style="width:100%; justify-content:center; padding: var(--sp-4);">
+        <i class="fas fa-check"></i> 保存设置
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 确认对话框 ===================== -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="confirmTitle">确认操作</div>
+      <button class="modal-close" data-close="confirmModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage" style="color: var(--text-secondary); font-size: var(--text-base); line-height:1.6;"></p>
+      <div class="confirm-actions">
+        <button id="cancelConfirmBtn" class="btn btn-ghost" style="flex:1; justify-content:center;">取消</button>
+        <button id="confirmActionBtn" class="btn btn-danger" style="flex:1; justify-content:center;">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 结算弹窗 ===================== -->
+<div class="modal-backdrop" id="settleModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">⚖️ 庄家结算</div>
+      <button class="modal-close" data-close="settleModal">✕</button>
+    </div>
+    <div class="modal-body" id="settleModalBody">
+      <!-- 动态填充 -->
+    </div>
+  </div>
 </div>
 
 <script>
-    // 全局设置
-    let settings = {
-        threshold: 20, // 清酒线分数
-        quickScores: [1, 5, 10] // 默认快捷分数
-    };
+/* ===========================
+   主题管理器
+=========================== */
+class ThemeManager {
+  constructor() {
+    this.current = localStorage.getItem('ux-theme') || 'system';
+    this.apply(this.current);
+    this.bindUI();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (this.current === 'system') this.apply('system');
+    });
+  }
+  apply(theme) {
+    this.current = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ux-theme', theme);
+    this.updateUI();
+  }
+  bindUI() {
+    document.querySelectorAll('[data-theme-val]').forEach(btn => {
+      btn.addEventListener('click', () => this.apply(btn.dataset.themeVal));
+    });
+  }
+  updateUI() {
+    document.querySelectorAll('[data-theme-val]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.themeVal === this.current);
+    });
+  }
+}
 
-    // 存储玩家数据的数组
-    let players = [];
+/* ===========================
+   模态框管理器
+=========================== */
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('open'); document.body.style.overflow = ''; }
+}
+document.addEventListener('click', e => {
+  const closeTarget = e.target.closest('[data-close]');
+  if (closeTarget) { closeModal(closeTarget.dataset.close); return; }
+  if (e.target.classList.contains('modal-backdrop')) closeModal(e.target.id);
+});
 
-    // 头像背景色池
-    const avatarColors = [
-        '#EF4444', '#F97316', '#F59E0B', '#84CC16', '#10B981',
-        '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF',
-        '#F43F5E', '#64748B'
-    ];
+/* ===========================
+   Toast 系统
+=========================== */
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('exit');
+    setTimeout(() => toast.remove(), 280);
+  }, 2400);
+}
 
-    function getRandomColor() {
-        return avatarColors[Math.floor(Math.random() * avatarColors.length)];
+/* ===========================
+   确认框
+=========================== */
+let confirmCb = null;
+function showConfirm(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = msg;
+  confirmCb = cb;
+  openModal('confirmModal');
+}
+document.getElementById('cancelConfirmBtn').addEventListener('click', () => closeModal('confirmModal'));
+document.getElementById('confirmActionBtn').addEventListener('click', () => {
+  if (typeof confirmCb === 'function') confirmCb();
+  closeModal('confirmModal');
+  confirmCb = null;
+});
+
+/* ===========================
+   核心数据
+=========================== */
+let settings = { threshold: 20, quickScores: [1, 5, 10] };
+let players = [];    // { id, name, score, totalScore, color, order }
+let history = [];
+let totalDrinks = 0;
+let bankerId = null; // 当前庄家 id
+let sortMode = null;
+
+const AVATAR_COLORS = [
+  '#ef4444','#f97316','#f59e0b','#84cc16','#10b981',
+  '#06b6d4','#3b82f6','#6366f1','#8b5cf6','#d946ef',
+  '#f43f5e','#64748b'
+];
+function randomColor() { return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]; }
+
+/* ===========================
+   持久化
+=========================== */
+function save() {
+  localStorage.setItem('lzv_players', JSON.stringify(players));
+  localStorage.setItem('lzv_settings', JSON.stringify(settings));
+  localStorage.setItem('lzv_history', JSON.stringify(history.slice(-50)));
+  localStorage.setItem('lzv_drinks', String(totalDrinks));
+  localStorage.setItem('lzv_banker', bankerId !== null ? String(bankerId) : '');
+}
+function load() {
+  const ps = localStorage.getItem('lzv_players');
+  const ss = localStorage.getItem('lzv_settings');
+  const hs = localStorage.getItem('lzv_history');
+  const ds = localStorage.getItem('lzv_drinks');
+  const bk = localStorage.getItem('lzv_banker');
+
+  if (ps) {
+    players = JSON.parse(ps);
+    players.forEach((p, i) => {
+      if (!p.color) p.color = randomColor();
+      if (typeof p.totalScore === 'undefined') p.totalScore = Math.max(0, p.score);
+      if (typeof p.order === 'undefined') p.order = i;
+    });
+  }
+  if (ss) settings = { ...settings, ...JSON.parse(ss) };
+  if (!Array.isArray(settings.quickScores)) settings.quickScores = [1, 5, 10];
+  if (hs) history = JSON.parse(hs);
+  if (ds) totalDrinks = parseInt(ds) || 0;
+  if (bk) bankerId = parseInt(bk) || null;
+}
+
+/* ===========================
+   渲染工具
+=========================== */
+function getAvatarText(player) {
+  if (!player.name) return '?';
+  const first = player.name.charAt(0);
+  const sameFirst = players.filter(p => p.name && p.name.charAt(0) === first);
+  if (sameFirst.length > 1 && player.name.length > 2) return player.name.slice(-2);
+  if (sameFirst.length > 1) return player.name;
+  return first;
+}
+function formatTime(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function renderStats() {
+  const alertCnt = players.filter(p => p.score >= settings.threshold).length;
+  document.getElementById('statTotal').textContent = players.length;
+  document.getElementById('statAlert').textContent = alertCnt;
+  document.getElementById('statDrank').textContent = totalDrinks;
+  const banker = players.find(p => p.id === bankerId);
+  const bankerEl = document.getElementById('statBanker');
+  bankerEl.textContent = banker ? banker.name : '—';
+  bankerEl.title = banker ? `当前庄家：${banker.name}` : '未设置庄家';
+}
+
+/* ===========================
+   渲染玩家列表
+=========================== */
+function getSortedPlayers() {
+  const sorted = [...players];
+  // 庄家永远置顶
+  sorted.sort((a, b) => {
+    if (a.id === bankerId) return -1;
+    if (b.id === bankerId) return 1;
+    return (a.order ?? 0) - (b.order ?? 0);
+  });
+  return sorted;
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playerList');
+  const empty = document.getElementById('emptyState');
+  Array.from(list.children).forEach(c => { if (!c.id) list.removeChild(c); });
+
+  if (players.length === 0) {
+    empty.style.display = '';
+    renderStats();
+    return;
+  }
+  empty.style.display = 'none';
+
+  const sorted = getSortedPlayers();
+
+  sorted.forEach(player => {
+    const over = player.score >= settings.threshold;
+    const neg  = player.score < 0;
+    const isB  = player.id === bankerId;
+
+    const card = document.createElement('div');
+    let cardClass = 'player-card';
+    if (over) cardClass += ' over-threshold';
+    if (isB)  cardClass += ' is-banker';
+    card.className = cardClass;
+    card.dataset.pid = player.id;
+    card.draggable = true;
+
+    const avatarText = getAvatarText(player);
+    const avatarStyle = `background-color: ${player.color};`;
+    const avatarFontSize = avatarText.length > 1 ? 'font-size: var(--text-sm);' : '';
+    const avatarClass = isB ? 'player-avatar banker-avatar' : 'player-avatar';
+
+    const quickHtml = settings.quickScores.slice(0, 5).map(v =>
+      `<button class="quick-chip" data-val="${v}" data-pid="${player.id}">${v}</button>`
+    ).join('');
+
+    const scoreClass = over ? 'warning' : 'normal';
+    let badgeHtml;
+    if (isB) {
+      badgeHtml = `<span class="score-badge banker-tag">👑 庄家</span>`;
+    } else if (over) {
+      badgeHtml = `<span class="score-badge danger">清酒！</span>`;
+    } else if (neg) {
+      badgeHtml = `<span class="score-badge muted">欠${Math.abs(player.score)}分</span>`;
+    } else {
+      badgeHtml = `<span class="score-badge muted">累计${player.totalScore}分</span>`;
     }
 
-    // DOM 元素
-    const playerNameInput = document.getElementById('playerNameInput');
-    const addPlayerBtn = document.getElementById('addPlayerBtn');
-    const playerList = document.getElementById('playerList');
-    const toast = document.getElementById('toast');
-    const resetAllBtn = document.getElementById('resetAllBtn');
-    const rulesBtn = document.getElementById('rulesBtn');
-    const rulesModal = document.getElementById('rulesModal');
-    const closeRulesBtn = document.getElementById('closeRulesBtn');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsModal = document.getElementById('settingsModal');
-    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-    const thresholdInput = document.getElementById('thresholdInput');
-    const quickScoresInput = document.getElementById('quickScoresInput');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const confirmModal = document.getElementById('confirmModal');
-    const confirmTitle = document.getElementById('confirmTitle');
-    const confirmMessage = document.getElementById('confirmMessage');
-    const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
-    const confirmActionBtn = document.getElementById('confirmActionBtn');
-    const sortNameBtn = document.getElementById('sortNameBtn');
-    const sortScoreBtn = document.getElementById('sortScoreBtn');
+    const nameClass = isB ? 'player-name player-name-banker' : 'player-name';
+    const metaText = isB
+      ? '👑 本局庄家 · 坐庄中'
+      : over ? '🔴 达到清酒线，快喝！' : neg ? '📉 存在欠酒' : '😊 状态正常';
 
-    // 确认框回调函数
-    let confirmCallback = null;
+    const bankerBtnText = isB ? '✓ 当前庄家' : '设为庄家';
+    const bankerBtnClass = isB ? 'btn-set-banker is-current-banker' : 'btn-set-banker';
 
-    // 页面加载时初始化
-    document.addEventListener('DOMContentLoaded', function () {
-        loadSettings();
-        loadPlayers();
-        renderPlayers();
-        setupEventListeners();
+    const avatarWrap = isB
+      ? `<div class="banker-crown"><div class="${avatarClass}" style="${avatarStyle}${avatarFontSize}">${avatarText}</div><span class="banker-badge">庄</span></div>`
+      : `<div class="${avatarClass}" style="${avatarStyle}${avatarFontSize}">${avatarText}</div>`;
 
-        // 初始化设置输入框
-        thresholdInput.value = settings.threshold;
-        quickScoresInput.value = settings.quickScores.join(', ');
+    card.innerHTML = `
+      <div class="player-card-header">
+        <div class="drag-handle" title="拖拽排序"><i class="fas fa-grip-vertical"></i></div>
+        ${avatarWrap}
+        <div class="player-info">
+          <div class="${nameClass}">${player.name}</div>
+          <div class="player-meta">${metaText}</div>
+        </div>
+        <div class="player-score-wrap">
+          <div class="player-score ${scoreClass}">${player.score}</div>
+          ${badgeHtml}
+        </div>
+      </div>
+      <div class="player-divider"></div>
+      <div class="player-card-actions">
+        <div class="quick-scores-row">
+          <span class="quick-label">快捷:</span>
+          ${quickHtml}
+        </div>
+        <div class="actions-row">
+          <input type="number" class="score-input" value="1" min="1" data-pid="${player.id}" placeholder="分">
+          <button class="btn-action btn-lose" data-pid="${player.id}" data-action="lose">
+            <i class="fas fa-plus" style="font-size:12px;"></i> 输了
+          </button>
+          <button class="btn-action btn-drink" data-pid="${player.id}" data-action="drink">
+            <i class="fas fa-beer-mug-empty" style="font-size:12px;"></i> 喝了
+          </button>
+          <button class="btn-delete" data-pid="${player.id}" data-action="delete" title="删除玩家">
+            <i class="fas fa-trash-can"></i>
+          </button>
+        </div>
+        <div class="banker-actions-row">
+          <button class="${bankerBtnClass}" data-pid="${player.id}" data-action="setbanker">
+            <i class="fas fa-crown"></i> ${bankerBtnText}
+          </button>
+          ${isB ? `<button class="btn-settle" data-pid="${player.id}" data-action="settle"><i class="fas fa-scale-balanced"></i> 结算</button>` : ''}
+        </div>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+
+  renderStats();
+  bindCardEvents();
+  bindDragEvents();
+}
+
+/* ===========================
+   事件绑定
+=========================== */
+function bindCardEvents() {
+  // 快捷分数
+  document.querySelectorAll('.quick-chip').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const pid = this.dataset.pid;
+      const inp = document.querySelector(`.score-input[data-pid="${pid}"]`);
+      if (inp) {
+        inp.value = this.dataset.val;
+        document.querySelectorAll(`.quick-chip[data-pid="${pid}"]`).forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+      }
+    });
+  });
+
+  // 主操作按钮
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', handleAction);
+  });
+}
+
+function handleAction(e) {
+  const btn = e.currentTarget;
+  const pid = parseInt(btn.dataset.pid);
+  const action = btn.dataset.action;
+  const player = players.find(p => p.id === pid);
+  if (!player && action !== 'settle') return;
+
+  if (action === 'lose') {
+    const inp = document.querySelector(`.score-input[data-pid="${pid}"]`);
+    const val = parseInt(inp.value);
+    if (isNaN(val) || val <= 0) { showToast('请输入有效的正整数'); return; }
+    const prev = player.score;
+    player.score += val;
+    player.totalScore = (player.totalScore || 0) + val;
+    addHistory({ playerId: pid, playerName: player.name, desc: `输了 ${val} 分`, delta: val, prevScore: prev });
+    showToast(`${player.name} +${val}分`);
+    if (player.score >= settings.threshold) showToast(`🍺 ${player.name} 达到清酒线，该喝了！`);
+
+  } else if (action === 'drink') {
+    const prev = player.score;
+    const delta = -settings.threshold;
+    player.score += delta;
+    totalDrinks++;
+    addHistory({ playerId: pid, playerName: player.name, desc: `喝了一杯`, delta, prevScore: prev });
+    if (prev >= settings.threshold) showToast(`✅ ${player.name} 喝了一杯，-${settings.threshold}分`);
+    else showToast(`📉 ${player.name} 喝了一杯，欠酒 ${Math.abs(player.score)} 分`);
+
+  } else if (action === 'delete') {
+    showConfirm('删除玩家', `确定要删除玩家"${player.name}"吗？此操作不可撤销。`, () => {
+      if (bankerId === pid) bankerId = null;
+      players = players.filter(p => p.id !== pid);
+      save(); renderPlayers(); showToast(`已删除 ${player.name}`);
+    });
+    return;
+
+  } else if (action === 'setbanker') {
+    if (bankerId === pid) return;
+    bankerId = pid;
+    save(); renderPlayers();
+    showToast(`👑 ${player.name} 已成为本局庄家！`);
+    return;
+
+  } else if (action === 'settle') {
+    openSettleModal(pid);
+    return;
+  }
+
+  save();
+  renderPlayers();
+}
+
+function addHistory(entry) {
+  history.push({ ...entry, time: Date.now() });
+  if (history.length > 50) history.shift();
+}
+
+/* ===========================
+   结算弹窗逻辑
+=========================== */
+// settleData: { [playerId]: { base: number, choice: 'ming'|'an'|'surrender'|null } }
+// 明：玩家赢，庄家 +base 分
+// 暗：庄家赢，该玩家 +base 分
+// 认输：该玩家 +base 分（认输不参与本局）
+let settleData = {};
+let settleActiveBankerId = null;
+
+function openSettleModal(bankerPid) {
+  settleActiveBankerId = bankerPid;
+  settleData = {};
+  const banker = players.find(p => p.id === bankerPid);
+  if (!banker) return;
+
+  const nonBankerPlayers = players.filter(p => p.id !== bankerPid);
+  if (nonBankerPlayers.length === 0) { showToast('没有其他玩家可结算'); return; }
+
+  // 初始化每人基数默认值
+  nonBankerPlayers.forEach(p => {
+    settleData[p.id] = { base: 2, choice: null };
+  });
+
+  renderSettleModal(banker, nonBankerPlayers);
+  openModal('settleModal');
+}
+
+function renderSettleModal(banker, nonBankers) {
+  const body = document.getElementById('settleModalBody');
+
+  const playerRowsHtml = nonBankers.map(p => {
+    const avatarText = getAvatarText(p);
+    const d = settleData[p.id] || { base: 2, choice: null };
+    const choice = d.choice;
+    const rowClass = choice === 'ming' ? 'selected-player-big'
+                   : choice === 'an'   ? 'selected-banker-big'
+                   : choice === 'surrender' ? 'selected-escape' : '';
+    return `
+      <div class="settle-player-row ${rowClass}" data-spid="${p.id}">
+        <div class="settle-row-top">
+          <div class="settle-avatar" style="background-color:${p.color}">${avatarText}</div>
+          <span class="settle-player-name">${p.name}<small style="color:var(--text-muted);font-weight:400;margin-left:4px;">(${p.score}分)</small></span>
+          <div class="settle-base-wrap">
+            <span class="settle-base-label">报数</span>
+            <input type="number" class="settle-base-input" data-spid="${p.id}"
+                   value="${d.base}" min="1" max="99">
+          </div>
+        </div>
+        <div class="settle-options">
+          <button class="settle-opt-btn opt-player-big ${choice === 'ming' ? 'active' : ''}"
+                  data-spid="${p.id}" data-choice="ming">明</button>
+          <button class="settle-opt-btn opt-banker-big ${choice === 'an' ? 'active' : ''}"
+                  data-spid="${p.id}" data-choice="an">暗</button>
+          <button class="settle-opt-btn opt-escape ${choice === 'surrender' ? 'active' : ''}"
+                  data-spid="${p.id}" data-choice="surrender">认输</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const summaryHtml = buildSettleSummary(banker, nonBankers);
+
+  body.innerHTML = `
+    <div class="banker-info-bar">
+      <span style="font-size:1.2em;">👑</span>
+      <span class="banker-info-text">庄家：${banker.name}（当前 ${banker.score} 分）</span>
+    </div>
+    <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:var(--sp-3);line-height:1.6;">
+      明=玩家赢→庄家加分 &nbsp;|&nbsp; 暗=庄赢→玩家加分 &nbsp;|&nbsp; 认输→该玩家加分
+    </div>
+    <div class="settle-players-list" id="settlePlayersList">
+      ${playerRowsHtml}
+    </div>
+    <div class="settle-summary" id="settleSummary">${summaryHtml}</div>
+    <button class="settle-confirm-btn" id="settleConfirmBtn">
+      <i class="fas fa-check-circle"></i> 确认结算
+    </button>
+  `;
+
+  // 报数输入联动（不重新渲染整个弹窗，只更新摘要）
+  body.querySelectorAll('.settle-base-input').forEach(input => {
+    input.addEventListener('input', function() {
+      const spid = parseInt(this.dataset.spid);
+      const v = parseInt(this.value);
+      if (!isNaN(v) && v >= 1) {
+        settleData[spid].base = v;
+        document.getElementById('settleSummary').innerHTML = buildSettleSummary(banker, nonBankers);
+      }
+    });
+  });
+
+  // 选项按钮
+  body.querySelectorAll('.settle-opt-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const spid = parseInt(this.dataset.spid);
+      const choice = this.dataset.choice;
+      settleData[spid].choice = (settleData[spid].choice === choice) ? null : choice;
+      renderSettleModal(banker, nonBankers);
+    });
+  });
+
+  // 确认结算
+  body.querySelector('#settleConfirmBtn').addEventListener('click', () => {
+    doSettle(banker, nonBankers);
+  });
+}
+
+function buildSettleSummary(banker, nonBankers) {
+  let lines = [];
+  let hasAny = false;
+  let bankerDelta = 0;
+
+  nonBankers.forEach(p => {
+    const d = settleData[p.id];
+    if (!d || !d.choice) return;
+    hasAny = true;
+    const base = d.base || 2;
+    if (d.choice === 'ming') {
+      bankerDelta += base;
+      lines.push(`<div class="sum-item"><span>${p.name}</span><span class="sum-add sum-ming">明 → 庄家 +${base}分</span></div>`);
+    } else if (d.choice === 'an') {
+      lines.push(`<div class="sum-item"><span>${p.name}</span><span class="sum-add">暗 → ${p.name} +${base}分</span></div>`);
+    } else if (d.choice === 'surrender') {
+      lines.push(`<div class="sum-item"><span>${p.name}</span><span class="sum-add sum-surrender">认输 → ${p.name} +${base}分</span></div>`);
+    }
+  });
+
+  if (bankerDelta > 0) {
+    lines.unshift(`<div class="sum-item sum-banker-total"><span>👑 庄家合计</span><span class="sum-add">+${bankerDelta}分</span></div>`);
+  }
+
+  if (!hasAny) return '<div style="color:var(--text-muted);text-align:center;padding:var(--sp-2)">请为玩家选择本局结果</div>';
+  return lines.join('');
+}
+
+function doSettle(banker, nonBankers) {
+  let changed = false;
+  let bankerDelta = 0;
+
+  nonBankers.forEach(p => {
+    const d = settleData[p.id];
+    if (!d || !d.choice) return;
+    changed = true;
+    const base = d.base || 2;
+
+    if (d.choice === 'ming') {
+      // 明：庄家加该玩家报的分
+      bankerDelta += base;
+
+    } else if (d.choice === 'an') {
+      // 暗：该玩家加自己报的分
+      const prev = p.score;
+      p.score += base;
+      p.totalScore = (p.totalScore || 0) + base;
+      addHistory({ playerId: p.id, playerName: p.name, desc: `结算·暗 +${base}`, delta: base, prevScore: prev });
+
+    } else if (d.choice === 'surrender') {
+      // 认输：该玩家加自己报的分
+      const prev = p.score;
+      p.score += base;
+      p.totalScore = (p.totalScore || 0) + base;
+      addHistory({ playerId: p.id, playerName: p.name, desc: `结算·认输 +${base}`, delta: base, prevScore: prev });
+    }
+  });
+
+  // 统一给庄家加分（所有明的累计）
+  if (bankerDelta > 0) {
+    const prev = banker.score;
+    banker.score += bankerDelta;
+    banker.totalScore = (banker.totalScore || 0) + bankerDelta;
+    addHistory({ playerId: banker.id, playerName: banker.name, desc: `结算·明 +${bankerDelta}`, delta: bankerDelta, prevScore: prev });
+  }
+
+  if (!changed) { showToast('请至少为一位玩家选择结果'); return; }
+
+  // 检查清酒线
+  players.forEach(p => {
+    if (p.score >= settings.threshold) showToast(`🍺 ${p.name} 达到清酒线，该喝了！`);
+  });
+
+  save();
+  renderPlayers();
+  closeModal('settleModal');
+  showToast('✅ 本局结算完成！');
+}
+
+/* ===========================
+   拖拽排序
+=========================== */
+let dragSrcPid = null;
+let dragSrcEl = null;
+
+function bindDragEvents() {
+  const cards = document.querySelectorAll('.player-card');
+
+  cards.forEach(card => {
+    // 只有非庄家才允许拖拽重排（庄家置顶固定）
+    const pid = parseInt(card.dataset.pid);
+
+    card.addEventListener('dragstart', e => {
+      if (pid === bankerId) { e.preventDefault(); return; }
+      dragSrcPid = pid;
+      dragSrcEl = card;
+      setTimeout(() => card.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
     });
 
-    // 设置事件监听器
-    function setupEventListeners() {
-        // 添加玩家
-        addPlayerBtn.addEventListener('click', addPlayer);
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      document.querySelectorAll('.player-card').forEach(c => c.classList.remove('drag-over'));
+      dragSrcPid = null;
+      dragSrcEl = null;
+    });
 
-        // 按回车键添加玩家
-        playerNameInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                addPlayer();
-            }
-        });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (dragSrcEl && card !== dragSrcEl && pid !== bankerId) {
+        document.querySelectorAll('.player-card').forEach(c => c.classList.remove('drag-over'));
+        card.classList.add('drag-over');
+      }
+    });
 
-        // 重置所有玩家分数
-        resetAllBtn.addEventListener('click', function () {
-            showConfirm('重置所有', '确定要重置所有玩家的分数吗？', function () {
-                players.forEach(player => {
-                    player.score = 0;
-                    player.totalScore = 0;
-                });
-                savePlayers();
-                renderPlayers();
-                showToast('已重置所有玩家分数');
-            });
-        });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
 
-        // 规则模态框
-        rulesBtn.addEventListener('click', () => rulesModal.classList.remove('hidden'));
-        closeRulesBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      if (!dragSrcPid || dragSrcPid === pid || pid === bankerId) return;
 
-        // 设置模态框
-        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+      // 重新排序
+      const srcPlayer = players.find(p => p.id === dragSrcPid);
+      const tgtPlayer = players.find(p => p.id === pid);
+      if (!srcPlayer || !tgtPlayer) return;
 
-        // 保存设置
-        saveSettingsBtn.addEventListener('click', function () {
-            const newThreshold = parseInt(thresholdInput.value);
-            const quickScoresStr = quickScoresInput.value.trim();
+      const srcOrder = srcPlayer.order;
+      const tgtOrder = tgtPlayer.order;
 
-            if (newThreshold && newThreshold > 0) {
-                settings.threshold = newThreshold;
-
-                // 处理快捷分数
-                if (quickScoresStr) {
-                    const scores = quickScoresStr.split(/[,，]/) // 支持中英文逗号
-                        .map(s => parseInt(s.trim()))
-                        .filter(n => !isNaN(n) && n > 0);
-
-                    if (scores.length > 0) {
-                        settings.quickScores = scores;
-                    }
-                }
-
-                saveSettings();
-                settingsModal.classList.add('hidden');
-                showToast('设置已保存');
-                renderPlayers(); // 重新渲染以更新提示和快捷按钮
-            } else {
-                showToast('请输入有效的分数');
-            }
-        });
-
-        // 确认框
-        cancelConfirmBtn.addEventListener('click', () => {
-            confirmModal.classList.add('hidden');
-            confirmCallback = null;
-        });
-
-        confirmActionBtn.addEventListener('click', () => {
-            if (typeof confirmCallback === 'function') {
-                confirmCallback();
-            }
-            confirmModal.classList.add('hidden');
-            confirmCallback = null;
-        });
-
-        // 排序按钮
-        sortNameBtn.addEventListener('click', function () {
-            players.sort((a, b) => a.name.localeCompare(b.name));
-            renderPlayers();
-            showToast('已按姓名排序');
-        });
-
-        sortScoreBtn.addEventListener('click', function () {
-            players.sort((a, b) => b.score - a.score);
-            renderPlayers();
-            showToast('已按分数排序');
-        });
-    }
-
-    // 添加玩家
-    function addPlayer() {
-        const name = playerNameInput.value.trim();
-        if (name) {
-            // 检查是否已存在同名玩家
-            if (players.some(player => player.name === name)) {
-                showToast('玩家姓名已存在，请更换姓名');
-                return;
-            }
-
-            const newPlayer = {
-                id: Date.now(),
-                name: name,
-                score: 0,
-                totalScore: 0,
-                color: getRandomColor()
-            };
-
-            players.push(newPlayer);
-            playerNameInput.value = ''; // 清空输入框
-            savePlayers();
-            renderPlayers();
-            showToast(`已添加玩家: ${name}`);
-
-            // 自动聚焦到输入框，方便连续添加
-            playerNameInput.focus();
-        } else {
-            showToast('请输入玩家姓名');
-        }
-    }
-
-    // 渲染玩家列表
-    function renderPlayers() {
-        playerList.innerHTML = ''; // 清空现有列表
-
-        if (players.length === 0) {
-            playerList.innerHTML = "<p class=\"text-gray-500 text-center py-6\">暂无玩家，请添加玩家开始游戏。</p>";
-            return;
-        }
-
-        // 计算首字出现次数，用于处理头像歧义
-        const firstCharCounts = {};
+      if (srcOrder < tgtOrder) {
         players.forEach(p => {
-            if (p.name) {
-                const firstChar = p.name.charAt(0);
-                firstCharCounts[firstChar] = (firstCharCounts[firstChar] || 0) + 1;
-            }
+          if (p.id !== dragSrcPid && p.id !== bankerId && p.order > srcOrder && p.order <= tgtOrder) p.order--;
         });
-
-        players.forEach(player => {
-            const isOverThreshold = player.score >= settings.threshold;
-            const playerCard = document.createElement('div');
-            playerCard.className = 'bg-gray-50 p-3 rounded-md shadow-sm flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2';
-
-            // 智能头像显示逻辑
-            let avatarText = '?';
-            let avatarFontSize = 'text-xl'; // 默认字体大小
-            if (player.name) {
-                const firstChar = player.name.charAt(0);
-                // 如果首字重复（如都姓王），则显示后两个字（如果名字够长）
-                if (firstCharCounts[firstChar] > 1) {
-                    if (player.name.length > 2) {
-                        avatarText = player.name.slice(-2);
-                        avatarFontSize = 'text-sm'; // 字数多了缩小字体
-                    } else {
-                        avatarText = player.name; // 名字短直接显示全名
-                        if (player.name.length > 1) avatarFontSize = 'text-lg';
-                    }
-                } else {
-                    avatarText = firstChar;
-                }
-            }
-
-            // 生成快捷分数按钮 HTML
-            const quickButtonsHtml = settings.quickScores.map(score => `
-                <button class="text-xs bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 px-2.5 py-0.5 rounded-full quick-score transition shadow-sm min-w-[1.5rem]" data-val="${score}" data-id="${player.id}">${score}</button>
-            `).join('');
-
-            playerCard.innerHTML = `
-                    <div class="flex-grow flex items-center space-x-3">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${avatarFontSize} shadow-sm flex-shrink-0 transition-all duration-300" style="background-color: ${player.color}">
-                            ${avatarText}
-                        </div>
-                        <div class="text-left">
-                            <h3 class="text-base font-semibold text-gray-800">${player.name}</h3>
-                            <div class="text-gray-600 text-sm">当前分数: <span class="font-bold text-lg ${isOverThreshold ? 'text-red-600' : 'text-green-600'}">${player.score}</span></div>
-                            <div class="flex items-center space-x-2">
-                                <p class="text-xs text-gray-500">累计: ${player.totalScore || 0}分</p>
-                                <p class="text-xs text-gray-500">${isOverThreshold ? `<span class="text-red-500 font-semibold">已达清酒线!</span>` : ''}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-end gap-1 mt-2 sm:mt-0">
-                         <div class="flex space-x-1 mb-1 items-center">
-                            <span class="text-xs text-gray-400 self-center mr-1">快捷:</span>
-                            ${quickButtonsHtml}
-                        </div>
-                        <div class="flex flex-wrap items-center justify-center gap-1">
-                            <input type="number" placeholder="分数" value="1" min="1" class="w-14 p-1 border border-gray-300 rounded-md text-center text-gray-700 score-input" data-id="${player.id}">
-                            <button data-id="${player.id}" data-action="lose" class="score-btn bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition flex items-center text-sm shadow-sm whitespace-nowrap">
-                                <i class="fas fa-plus mr-1"></i>输了
-                            </button>
-                            <button data-id="${player.id}" data-action="drink" class="score-btn bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition flex items-center text-sm shadow-sm whitespace-nowrap">
-                                <i class="fas fa-beer-mug-empty mr-1"></i>喝了
-                            </button>
-                            <button data-id="${player.id}" data-action="delete" class="delete-btn bg-gray-200 text-gray-600 px-2 py-1 rounded-md hover:bg-gray-300 transition flex items-center text-sm whitespace-nowrap">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            playerList.appendChild(playerCard);
+      } else {
+        players.forEach(p => {
+          if (p.id !== dragSrcPid && p.id !== bankerId && p.order >= tgtOrder && p.order < srcOrder) p.order++;
         });
+      }
+      srcPlayer.order = tgtOrder;
 
-        // 为新渲染的按钮添加事件监听器
-        document.querySelectorAll('.score-btn').forEach(button => {
-            button.addEventListener('click', handleScoreChange);
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', deletePlayer);
-        });
-
-        // 快捷分数按钮监听器
-        document.querySelectorAll('.quick-score').forEach(button => {
-            button.addEventListener('click', function () {
-                const val = this.dataset.val;
-                const id = this.dataset.id;
-                const input = document.querySelector(`.score-input[data-id="${id}"]`);
-                if (input) {
-                    input.value = val;
-                    // 可选：添加动画效果提示已选择
-                    input.classList.add('ring-2', 'ring-blue-400');
-                    setTimeout(() => input.classList.remove('ring-2', 'ring-blue-400'), 200);
-                }
-            });
-        });
-    }
-
-    // 处理分数变化
-    function handleScoreChange(event) {
-        const button = event.currentTarget;
-        const playerId = parseInt(button.dataset.id);
-        const action = button.dataset.action;
-        const playerIndex = players.findIndex(p => p.id === playerId);
-
-        if (playerIndex === -1) return; // 玩家不存在
-
-        const player = players[playerIndex];
-
-        if (action === 'lose') {
-            const scoreInput = document.querySelector(`.score-input[data-id="${playerId}"]`);
-            const scoreToAdd = parseInt(scoreInput.value);
-
-            if (isNaN(scoreToAdd) || scoreToAdd <= 0) {
-                showToast('请输入有效的正整数分数');
-                return;
-            }
-
-            player.score += scoreToAdd;
-            player.totalScore = (player.totalScore || 0) + scoreToAdd;
-            showToast(`${player.name} 分数增加了 ${scoreToAdd} 分`);
-
-            if (player.score >= settings.threshold) {
-                showToast(`${player.name} 已达${settings.threshold}分，该清酒一杯了！`);
-            }
-        } else if (action === 'drink') {
-            const previousScore = player.score;
-            player.score -= settings.threshold;
-
-            if (previousScore >= settings.threshold) {
-                showToast(`${player.name} 喝了一杯，分数减少${settings.threshold}分`);
-            } else {
-                const owedPoints = settings.threshold - previousScore;
-                showToast(`${player.name} 喝了一杯，当前欠 ${owedPoints} 分`);
-            }
-        }
-
-        savePlayers();
-        renderPlayers();
-    }
-
-    // 删除玩家
-    function deletePlayer(event) {
-        const playerId = parseInt(event.currentTarget.dataset.id);
-        const player = players.find(p => p.id === playerId);
-
-        if (player) {
-            showConfirm('删除玩家', `确定要删除玩家"${player.name}"吗？`, function () {
-                players = players.filter(p => p.id !== playerId);
-                savePlayers();
-                renderPlayers();
-                showToast(`已删除玩家: ${player.name}`);
-            });
-        }
-    }
-
-    // 显示提示框
-    function showToast(message, duration = 2000) {
-        toast.textContent = message;
-        toast.classList.remove('hidden', 'toast-exit');
-        toast.classList.add('toast-enter');
-
-        setTimeout(() => {
-            toast.classList.remove('toast-enter');
-            toast.classList.add('toast-exit');
-
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 300);
-        }, duration);
-    }
-
-    // 显示确认框
-    function showConfirm(title, message, callback) {
-        confirmTitle.textContent = title;
-        confirmMessage.textContent = message;
-        confirmCallback = callback;
-        confirmModal.classList.remove('hidden');
-    }
-
-    // 保存玩家数据到本地存储
-    function savePlayers() {
-        localStorage.setItem('drinkingGamePlayers', JSON.stringify(players));
-    }
-
-    // 从本地存储加载玩家数据
-    function loadPlayers() {
-        const storedPlayers = localStorage.getItem('drinkingGamePlayers');
-        if (storedPlayers) {
-            players = JSON.parse(storedPlayers);
-            // 确保旧数据也有颜色和累计分数
-            let updated = false;
-            players.forEach(p => {
-                if (!p.color) {
-                    p.color = getRandomColor();
-                    updated = true;
-                }
-                // 初始化累计分数，如果不存在则设为当前分数（因为无法追溯历史）
-                if (typeof p.totalScore === 'undefined') {
-                    p.totalScore = p.score;
-                    updated = true;
-                }
-            });
-            if (updated) savePlayers();
-        }
-    }
-
-    // 保存设置到本地存储
-    function saveSettings() {
-        localStorage.setItem('drinkingGameSettings', JSON.stringify(settings));
-    }
-
-    // 从本地存储加载设置
-    function loadSettings() {
-        const storedSettings = localStorage.getItem('drinkingGameSettings');
-        if (storedSettings) {
-            const parsed = JSON.parse(storedSettings);
-            // 合并默认设置，确保新字段存在
-            settings = {...settings, ...parsed};
-            // 确保quickScores是数组
-            if (!Array.isArray(settings.quickScores)) {
-                settings.quickScores = [1, 5, 10];
-            }
-        }
-    }
-
-    // 劫持属性的代码（保留原功能）
-    var ytCustomProperties = ['textContent', 'innerText'];
-    ytCustomProperties.forEach(function (prop) {
-        var descriptor = Object.getOwnPropertyDescriptor(Element.prototype, prop) || Object.getOwnPropertyDescriptor(Node.prototype, prop);
-        if (descriptor && descriptor.set) {
-            var originalSet = descriptor.set;
-            Object.defineProperty(Element.prototype, prop, {
-                set: function set(value) {
-                    var finalValue = this.dataset.yteditvalue ?? value;
-                    originalSet.call(this, finalValue);
-                },
-                configurable: true
-            });
-        }
+      save();
+      renderPlayers();
     });
+  });
 
-    var nativeElementQuerySelector = Element.prototype.querySelector;
-    var nativeDocumentQuerySelector = Document.prototype.querySelector;
+  // Touch 拖拽支持（移动端）
+  bindTouchDrag();
+}
 
-    function ytCustomQuerySelector(selector) {
-        var foundElement = this === document ? nativeDocumentQuerySelector.call(this, selector) : nativeElementQuerySelector.call(this, selector);
-        if (foundElement) {
-            if (!foundElement.hasAttribute('data-selectorname')) {
-                foundElement.setAttribute('data-selectorname', selector);
-            }
-            return foundElement;
+/* ===========================
+   Touch 拖拽（移动端）
+=========================== */
+let touchDragPid = null;
+let touchClone = null;
+let touchStartY = 0;
+let touchLastY = 0;
+
+function bindTouchDrag() {
+  document.querySelectorAll('.drag-handle').forEach(handle => {
+    handle.addEventListener('touchstart', onTouchStart, { passive: false });
+  });
+}
+
+function getCardByPid(pid) {
+  return document.querySelector(`.player-card[data-pid="${pid}"]`);
+}
+
+function onTouchStart(e) {
+  const card = e.target.closest('.player-card');
+  if (!card) return;
+  const pid = parseInt(card.dataset.pid);
+  if (pid === bankerId) return;
+
+  touchDragPid = pid;
+  touchStartY = e.touches[0].clientY;
+  touchLastY = touchStartY;
+
+  // 创建克隆拖影
+  const rect = card.getBoundingClientRect();
+  touchClone = card.cloneNode(true);
+  touchClone.style.cssText = `
+    position: fixed; left: ${rect.left}px; top: ${rect.top}px;
+    width: ${rect.width}px; opacity: 0.85; z-index: 999; pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: var(--radius-lg);
+    transition: none;
+  `;
+  document.body.appendChild(touchClone);
+  card.style.opacity = '0.3';
+
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!touchClone || touchDragPid === null) return;
+  const dy = e.touches[0].clientY - touchLastY;
+  touchLastY = e.touches[0].clientY;
+  const currentTop = parseFloat(touchClone.style.top) + dy;
+  touchClone.style.top = currentTop + 'px';
+
+  // 找目标
+  touchClone.style.display = 'none';
+  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  touchClone.style.display = '';
+  const targetCard = el ? el.closest('.player-card') : null;
+
+  document.querySelectorAll('.player-card').forEach(c => c.classList.remove('drag-over'));
+  if (targetCard) {
+    const tpid = parseInt(targetCard.dataset.pid);
+    if (tpid !== touchDragPid && tpid !== bankerId) targetCard.classList.add('drag-over');
+  }
+}
+
+function onTouchEnd(e) {
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend', onTouchEnd);
+
+  if (touchClone) { touchClone.remove(); touchClone = null; }
+  const srcCard = getCardByPid(touchDragPid);
+  if (srcCard) srcCard.style.opacity = '';
+
+  // 找落点目标
+  const overCard = document.querySelector('.player-card.drag-over');
+  document.querySelectorAll('.player-card').forEach(c => c.classList.remove('drag-over'));
+
+  if (overCard && touchDragPid !== null) {
+    const tpid = parseInt(overCard.dataset.pid);
+    if (tpid !== touchDragPid && tpid !== bankerId) {
+      const srcPlayer = players.find(p => p.id === touchDragPid);
+      const tgtPlayer = players.find(p => p.id === tpid);
+      if (srcPlayer && tgtPlayer) {
+        const srcOrder = srcPlayer.order;
+        const tgtOrder = tgtPlayer.order;
+        if (srcOrder < tgtOrder) {
+          players.forEach(p => {
+            if (p.id !== touchDragPid && p.id !== bankerId && p.order > srcOrder && p.order <= tgtOrder) p.order--;
+          });
+        } else {
+          players.forEach(p => {
+            if (p.id !== touchDragPid && p.id !== bankerId && p.order >= tgtOrder && p.order < srcOrder) p.order++;
+          });
         }
-
-        var allElements = document.querySelectorAll('[data-selectorname]');
-        for (var i = 0; i < allElements.length; i++) {
-            if (allElements[i].getAttribute('data-selectorname') === selector) {
-                return allElements[i];
-            }
-        }
-
-        return null;
+        srcPlayer.order = tgtOrder;
+        save();
+        renderPlayers();
+      }
     }
+  }
+  touchDragPid = null;
+}
 
-    Document.prototype.querySelector = ytCustomQuerySelector;
-    Element.prototype.querySelector = ytCustomQuerySelector;
+/* ===========================
+   历史记录
+=========================== */
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (history.length === 0) {
+    list.innerHTML = '<div style="text-align:center; color: var(--text-muted); font-size: var(--text-sm); padding: var(--sp-6);">暂无操作记录</div>';
+    return;
+  }
+  list.innerHTML = [...history].reverse().map((h, i) => `
+    <div class="history-item">
+      <span class="history-time">${formatTime(h.time)}</span>
+      <span class="history-desc">${h.playerName} · ${h.desc}</span>
+      <span class="history-score ${h.delta > 0 ? 'pos' : 'neg'}">${h.delta > 0 ? '+' : ''}${h.delta}</span>
+      ${i === 0 ? `<button class="btn-undo">撤销</button>` : ''}
+    </div>
+  `).join('');
+  list.querySelectorAll('.btn-undo').forEach(btn => btn.addEventListener('click', () => undoLast()));
+}
 
-    var nativeElementInsertBefore = Element.prototype.insertBefore;
+function undoLast() {
+  if (history.length === 0) { showToast('没有可撤销的操作'); return; }
+  const last = history.pop();
+  const player = players.find(p => p.id === last.playerId);
+  if (player) {
+    player.score = last.prevScore;
+    if (last.delta > 0) player.totalScore = Math.max(0, (player.totalScore || 0) - last.delta);
+    if (last.delta < 0) totalDrinks = Math.max(0, totalDrinks - 1);
+    save(); renderPlayers(); renderHistory();
+    showToast(`已撤销: ${last.playerName} 的操作`);
+  } else {
+    showToast('无法撤销：玩家已删除');
+  }
+}
 
-    function ytCustomInsertBefore(newNode, referenceNode) {
-        var defaultParentNode = this;
+/* ===========================
+   添加玩家
+=========================== */
+function addPlayer() {
+  const input = document.getElementById('playerNameInput');
+  const name = input.value.trim();
+  if (!name) { showToast('请输入玩家姓名'); input.focus(); return; }
+  if (name.length > 10) { showToast('姓名最长10个字'); return; }
+  if (players.some(p => p.name === name)) { showToast(`"${name}" 已存在`); return; }
+  const maxOrder = players.length > 0 ? Math.max(...players.map(p => p.order ?? 0)) : -1;
+  players.push({ id: Date.now(), name, score: 0, totalScore: 0, color: randomColor(), order: maxOrder + 1 });
+  input.value = '';
+  input.focus();
+  save(); renderPlayers();
+  showToast(`已添加 ${name} 🎉`);
+}
 
-        if (!referenceNode) {
-            return nativeElementInsertBefore.call(defaultParentNode, newNode, null);
-        }
+/* ===========================
+   排序
+=========================== */
+document.getElementById('sortNameBtn').addEventListener('click', function() {
+  const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+  sorted.forEach((p, i) => { const pl = players.find(x => x.id === p.id); if (pl) pl.order = i; });
+  sortMode = 'name';
+  document.getElementById('sortNameBtn').classList.add('active-sort');
+  document.getElementById('sortScoreBtn').classList.remove('active-sort');
+  document.getElementById('sortManualBtn').classList.remove('active-sort');
+  save(); renderPlayers(); showToast('已按姓名排序');
+});
 
-        if (referenceNode.parentNode === defaultParentNode) {
-            return nativeElementInsertBefore.call(defaultParentNode, newNode, referenceNode);
-        }
+document.getElementById('sortScoreBtn').addEventListener('click', function() {
+  const sorted = [...players].sort((a, b) => b.score - a.score);
+  sorted.forEach((p, i) => { const pl = players.find(x => x.id === p.id); if (pl) pl.order = i; });
+  sortMode = 'score';
+  document.getElementById('sortScoreBtn').classList.add('active-sort');
+  document.getElementById('sortNameBtn').classList.remove('active-sort');
+  document.getElementById('sortManualBtn').classList.remove('active-sort');
+  save(); renderPlayers(); showToast('已按分数排序');
+});
 
-        var referenceParentValue = referenceNode.getAttribute('data-ytparentvalue');
-        if (referenceParentValue) {
-            var actualParentNode = document.querySelector('[data-ytextravalue="' + referenceParentValue + '"]');
-            if (actualParentNode) {
-                var originalIndex = referenceNode.getAttribute('data-ytoriginindex');
-                if (originalIndex !== null && !isNaN(originalIndex)) {
-                    var children = Array.from(actualParentNode.children);
+document.getElementById('sortManualBtn').addEventListener('click', function() {
+  sortMode = 'manual';
+  document.getElementById('sortManualBtn').classList.add('active-sort');
+  document.getElementById('sortNameBtn').classList.remove('active-sort');
+  document.getElementById('sortScoreBtn').classList.remove('active-sort');
+  showToast('拖拽把手可手动排序');
+});
 
-                    for (var i = 0; i < children.length; i++) {
-                        var child = children[i];
-                        var childOriginalIndex = child.getAttribute('data-ytoriginindex');
+/* ===========================
+   头部按钮
+=========================== */
+document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
+document.getElementById('playerNameInput').addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer(); });
 
-                        if (childOriginalIndex !== null && !isNaN(childOriginalIndex)) {
-                            if (parseInt(childOriginalIndex) > parseInt(originalIndex)) {
-                                return nativeElementInsertBefore.call(actualParentNode, newNode, child);
-                            }
-                        }
-                    }
+document.getElementById('rulesBtn').addEventListener('click', () => openModal('rulesModal'));
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  document.getElementById('thresholdInput').value = settings.threshold;
+  document.getElementById('quickScoresInput').value = settings.quickScores.join(', ');
+  openModal('settingsModal');
+});
+document.getElementById('historyBtn').addEventListener('click', () => { renderHistory(); openModal('historyModal'); });
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+  showConfirm('重置所有', '确定要重置所有玩家的当前分数吗？累计数据将保留。', () => {
+    players.forEach(p => { p.score = 0; });
+    save(); renderPlayers(); showToast('已重置所有当前分数');
+  });
+});
 
-                    return nativeElementInsertBefore.call(actualParentNode, newNode, null);
-                }
+/* ===========================
+   设置保存
+=========================== */
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  const t = parseInt(document.getElementById('thresholdInput').value);
+  const qStr = document.getElementById('quickScoresInput').value.trim();
+  if (!t || t <= 0) { showToast('清酒线必须是正整数'); return; }
+  settings.threshold = t;
+  if (qStr) {
+    const parsed = qStr.split(/[,，]/).map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+    if (parsed.length) settings.quickScores = parsed.slice(0, 5);
+  }
+  save(); closeModal('settingsModal'); renderPlayers(); showToast('设置已保存 ✅');
+});
 
-                return nativeElementInsertBefore.call(actualParentNode, newNode, null);
-            }
-        }
-
-        return nativeElementInsertBefore.call(defaultParentNode, newNode, null);
-    }
-
-    Element.prototype.insertBefore = ytCustomInsertBefore;
-
-    function addUniqueStyle(cssText, id = 'custom-style') {
-        var targetDom = document.getElementById(id);
-        if (targetDom && targetDom.tagName === 'STYLE') return;
-
-        var style = document.createElement('style');
-        style.id = id;
-        style.innerHTML = cssText;
-        document.head.appendChild(style);
-    }
-
-    addUniqueStyle('.yt-a-defalut-link[custom-a="true"] > * { margin:0;flex:1; }');
+/* ===========================
+   初始化
+=========================== */
+document.addEventListener('DOMContentLoaded', () => {
+  new ThemeManager();
+  load();
+  renderPlayers();
+});
 </script>
 </body>
 </html>
